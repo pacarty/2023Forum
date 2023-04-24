@@ -1,0 +1,113 @@
+@using Whirl1.Entities;
+@using Microsoft.AspNetCore.Authorization;
+@using System.Security.Claims;
+@inject IAuthorizationService authorizationService;
+@model ApplicationUser
+
+@{
+    List<string> editRoles = ViewBag.editRoles;
+    List<Category> categories = ViewBag.categories;
+    List<ModeratorLink> selectedModeratedCategories = ViewBag.selectedModeratedCategories;
+    List<BannedLink> selectedBannedCategories = ViewBag.selectedBannedCategories;
+    
+    string moderatorDisplay = "none";
+
+    if (Model.Role == "Moderator")
+    {
+        moderatorDisplay = "block";
+    }
+
+    ViewData["Title"] = @Model.Username;
+}
+
+@section ForumNavigation
+{
+    > <a class="navLinks" asp-controller="Admin" asp-action="Index">Admin</a>
+    &nbsp;> <a class="navLinks" asp-controller="Admin" asp-action="UserManagement">Users</a>
+    &nbsp;> <a class="navLinks" asp-controller="Admin" asp-action="EditUser" asp-route-id="@Model.Id">@Model.Username</a>
+}
+
+<div class="row">
+    <p><strong>User Id: </strong>@Model.Id</p>
+</div>
+<div class="row">
+    <p><strong>Username: </strong>@Model.Username</p>
+</div>
+
+@if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
+{
+    <form asp-controller="Admin" asp-action="EditUserRole" method="post" id="editUserRoleForm">
+        <input type="hidden" id="userId" name="userId" value="@Model.Id" />
+
+        <h3>Role</h3>
+
+        @for (int i = 0; i < editRoles.Count; i++)
+        {
+            @if (Model.Role == editRoles[i])
+            {
+                <input type="radio" id="@editRoles[i]" name="role" value="@editRoles[i]" onclick="checkIfModSelected(this.value)" checked />
+            }
+            else
+            {
+                <input type="radio" id="@editRoles[i]" name="role" value="@editRoles[i]" onclick="checkIfModSelected(this.value)" />
+            }
+            
+            <label for="@editRoles[i]">@editRoles[i]</label>
+            <br />
+        }
+        <br />
+    
+        <div id="editModerationDIV" style="display:@moderatorDisplay">
+            <h3>Moderated Categories</h3>
+
+            @for (int i = 0; i < categories.Count; i++)
+            {
+                string isSelected = "";
+                @for (int j = 0; j < selectedModeratedCategories.Count; j++)
+                {
+                    @if (selectedModeratedCategories[j].CategoryId == categories[i].Id)
+                    {
+                        isSelected = "checked";
+                        break;
+                    }
+                }
+
+                <input type="checkbox" id="moderation_category_@categories[i].Id" name="moderation_categories" value="moderation_category_@categories[i].Id" @isSelected />
+                <label for="moderation_category_@categories[i].Id">@categories[i].Name</label>
+                <br />
+            }
+            <br />
+        </div>
+        <a class="submitCommentBtn" href="javascript:submitEditUserRole()">Save Changes</a>
+    </form>
+}
+
+@if ((await authorizationService.AuthorizeAsync(User, @Model.Id, "IsHigherAuthority")).Succeeded)
+{
+    <br><br>
+    <form asp-controller="Admin" asp-action="EditUserBanned" method="post" id="editUserBannedForm">
+        <input type="hidden" id="userId" name="userId" value="@Model.Id" />
+
+        <h3>Banned Categories</h3>
+    
+        @for (int i = 0; i < categories.Count; i++)
+        {
+            string isSelected = "";
+            @for (int j = 0; j < selectedBannedCategories.Count; j++)
+            {
+                @if (selectedBannedCategories[j].CategoryId == categories[i].Id)
+                {
+                    isSelected = "checked";
+                    break;
+                }
+            }
+
+            <input type="checkbox" id="banned_category_@categories[i].Id" name="banned_categories" value="banned_category_@categories[i].Id" @isSelected />
+            <label for="banned_category_@categories[i].Id">@categories[i].Name</label>
+            <br />
+        }
+        <br />
+
+        <a class="submitCommentBtn" href="javascript:submitEditUserBanned()">Save Changes</a>
+    </form>
+}

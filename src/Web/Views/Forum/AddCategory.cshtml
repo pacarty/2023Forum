@@ -1,0 +1,23 @@
+@model Int32
+
+@{
+    ViewData["Title"] = "Add Category";
+}
+
+@section ForumNavigation
+{
+    > <a class="navLinks" asp-controller="Forum" asp-action="AddCategory">Add Category</a>
+}
+
+<h1>Create new category</h1>
+
+<form asp-controller="Forum" asp-action="AddCategory" method="post" id="addCategoryForm">
+    <label for="categoryName">Name</label>
+    <input type="text" id="categoryName" name="categoryName" style="background-color:white;" onkeyup="checkAddCategory()" />
+    <br /><br />
+    <a class="submitCommentBtn" href="javascript:submitAddCategory()">Add Category</a>
+</form>
+<br>
+<div class="row">
+    <span id="addCategoryValidation" name="addCategoryValidation" style="color:red;"></span>
+</div>

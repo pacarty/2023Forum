@@ -1,0 +1,45 @@
+@using Microsoft.AspNetCore.Authorization;
+@inject IAuthorizationService authorizationService;
+
+@{
+    bool isLoggedIn = false;
+    string? currentUserId;
+    string? currentUsername;
+
+    if (Context.User.Identity.IsAuthenticated)
+    {
+        isLoggedIn = true;
+        currentUserId = Context.User.Claims.FirstOrDefault(c => c.Type == "UserId").Value;
+        currentUsername = Context.User.Claims.FirstOrDefault(c => c.Type == "Username").Value;
+    }
+    else
+    {
+        isLoggedIn = false;
+        currentUserId = null;
+        currentUsername = null;
+    }
+}
+
+@if (!isLoggedIn)
+{
+    <p>
+        <a class="navLinks" asp-controller="Account" asp-action="Register">Register</a>&nbsp;&nbsp;&nbsp;
+        <a class="navLinks" asp-controller="Account" asp-action="Login">Login</a>
+    </p>
+}
+else
+{
+    <p>
+        @if ((await authorizationService.AuthorizeAsync(User, "IsManager")).Succeeded)
+        {
+            <a class="navLinks" asp-controller="Admin" asp-action="Index">Admin</a>
+        }
+        <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm" style="display:inline;">
+            <a class="navLinks" href="javascript:submitLogout()">Logout</a>&nbsp;&nbsp;&nbsp;
+        </form>
+
+        <a class="navLinks" href="#">Settings</a>&nbsp;&nbsp;&nbsp;
+        <a class="navLinks" asp-controller="Forum" asp-action="UserInformation" asp-route-id="@currentUserId">@currentUsername</a>
+    </p>
+}
+

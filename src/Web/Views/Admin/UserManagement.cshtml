@@ -1,0 +1,97 @@
+@using Whirl1.Entities;
+@model List<ApplicationUser>
+
+@{
+    ViewData["Title"] = "User Management";
+
+    int totalItems = ViewBag.totalItems;
+    int itemsPerPage = ViewBag.itemsPerPage;
+    int currentPage = ViewBag.currentPage;
+    int totalPages = ViewBag.totalPages;
+    int previous = ViewBag.previous;
+    int next = ViewBag.next;
+}
+
+@section ForumNavigation
+{
+    > <a class="navLinks" asp-controller="Admin" asp-action="Index">Admin</a>
+    &nbsp;> <a class="navLinks" asp-controller="Admin" asp-action="UserManagement">Users</a>
+}
+
+<br>
+
+@if (Model.Any())
+{
+    @foreach (var user in @Model)
+    {
+        <div class="row postRow">
+            <div class="col-2">#@user.Id</div>
+            <div class="col-4">
+                <a class="navLinks" asp-controller="Forum" asp-action="UserInformation" asp-route-id="@user.Id">@user.Username</a>
+            </div>
+            <div class="col-2">
+                <a class="navLinks" asp-controller="Admin" asp-action="EditUser" asp-route-id="@user.Id">Edit</a>
+            </div>
+        </div>
+    }
+    <br><br>
+    <div class="pagination">
+        @*Previous*@
+        @if (previous < 1)
+        {
+            // do nothing
+        }
+        else if (previous == 1)
+        {
+            <a asp-controller="Admin" asp-action="UserManagement">&laquo;</a>
+        }
+        else
+        {
+            <a asp-controller="Admin" asp-action="UserManagement" asp-route-page="@previous">&laquo;</a>
+        }
+
+        @*Pages*@
+        @if (totalPages > 1)
+        {
+            string activeClass = "";
+
+            if (currentPage == 1)
+            {
+                activeClass = "active";
+            }
+            else
+            {
+                activeClass = "";
+            }
+
+            <a class=@activeClass asp-controller="Admin" asp-action="UserManagement">1</a>
+
+            @for (int i = 2; i <= totalPages; i++)
+            {
+                if (currentPage == i)
+                {
+                    activeClass = "active";
+                }
+                else
+                {
+                    activeClass = "";
+                }
+
+                <a class=@activeClass asp-controller="Admin" asp-action="UserManagement" asp-route-page="@i">@i</a>
+            }
+        }
+
+        @*Next*@
+        @if (next > totalPages)
+        {
+            // do nothing
+        } else
+        {
+            <a asp-controller="Admin" asp-action="UserManagement" asp-route-page="@next">&raquo;</a>
+        }
+    </div>
+}
+else
+{
+    <p>There are no users to display.</p>
+}

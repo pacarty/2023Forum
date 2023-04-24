@@ -1,0 +1,34 @@
+@using Whirl1.Entities;
+@model Topic
+
+@{
+    ViewData["Title"] = "Add Post" ;
+}
+
+@if (Model != null)
+{
+    @section ForumNavigation
+    {
+        > <a class="navLinks" asp-controller="Forum" asp-action="Topic" asp-route-id="@Model.Id">@Model.Name</a>
+        &nbsp;> <a class="navLinks" asp-controller="Forum" asp-action="AddPost" asp-route-id="@Model.Id">Add Post</a>
+    }
+
+    <br>
+    <form asp-controller="Forum" asp-action="AddPost" method="post" id="addPostForm">
+        <input type="hidden" id="topicId" name="topicId" value="@Model.Id"  />
+        <label for="postTitle">Title</label>
+        <input type="text" id="postTitle" name="postTitle" style="background-color:white;" onkeyup="checkAddPost()" />
+        <br><br>
+        <textarea id="commentContent" name="commentContent" rows="4" cols="70" style="background-color:white;" onkeyup="checkAddPost()"></textarea>
+        <br><br>
+        <a class="submitCommentBtn" href="javascript:submitAddPost()">Add Post</a>
+    </form>
+    <br>
+    <div class="row">
+        <span id="addPostValidation" name="addPostValidation" style="color:red;"></span>
+    </div>
+}
+else
+{
+    <h1>Topic doesn't exist</h1>
+}

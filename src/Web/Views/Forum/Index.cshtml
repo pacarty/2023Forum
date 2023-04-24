@@ -1,0 +1,118 @@
+@using Whirl1.Entities;
+@using Microsoft.AspNetCore.Authorization;
+@using System.Security.Claims;
+@inject IAuthorizationService authorizationService;
+@model List<Category>
+
+@{
+    ViewData["Title"] = "Forum";
+}
+
+<br>
+
+@if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
+{
+    <div class="row">
+        <p><a class="addBtn" asp-controller="Forum" asp-action="AddCategory">Add Category</a></p>
+    </div>
+}
+
+@if (Model.Any())
+{
+    @foreach (var category in @Model)
+    {
+        <div class="row categoryHeader">
+            <div class="col-6 categoryTitle">@category.Name &nbsp;&nbsp;
+                @if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
+                {
+                    <a href="javascript:openDeleteCategoryModal(@category.Id, '@category.Name')" class="removeBtn">Remove</a>
+                }
+            </div>
+            @if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
+            {
+                <div class="col-6 addTopicArea">
+                    <a class="addBtn" asp-controller="Forum" asp-action="AddTopic" asp-route-id="@category.Id">Add Topic</a>
+                </div>
+            }
+        </div>
+
+        @if (category.Topics.Any())
+        {
+            @foreach (var topic in category.Topics)
+            {
+                <div class="row topicRow">
+                    <div class="col-5 topicTitleArea"><a class="navLinks" asp-controller="Forum" asp-action="Topic" asp-route-id="@topic.Id">@topic.Name</a>&nbsp;&nbsp;
+                    
+                    @if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
+                    {
+                        <a href="javascript:openDeleteTopicModal(@topic.Id, '@topic.Name')" class="removeBtn">Remove</a>
+                    }
+                </div>
+                    
+                    @if (topic.MostRecentCommentedPost != null)
+                    {
+                        <div class="col-4 postTitleArea"><a class="navLinks" asp-controller="Forum" asp-action="Post" asp-route-id="@topic.MostRecentCommentedPost.Id">@topic.MostRecentCommentedPost.Title</a></div>
+                        <div class="col-1"></div>
+                        <div class="col-2">
+                            <div class="row topicLastComment"><a class="postRightSideLinks" asp-controller="Forum" asp-action="Post" asp-route-id="@topic.MostRecentCommentedPost.Id" asp-route-page="@topic.MostRecentCommentedPost.LastPage" asp-fragment="com_@topic.MostRecentCommentedPost.MostRecentComment.Id">@topic.MostRecentCommentedPost.MostRecentComment.CreatedTS</a></div>
+
+                            <div class="row topicLastComment"><a class="postRightSideLinks" asp-controller="Forum" asp-action="UserInformation" asp-route-id="@topic.MostRecentCommentedPost.MostRecentComment.ApplicationUser.Id">@topic.MostRecentCommentedPost.MostRecentComment.ApplicationUser.Username</a></div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-4 postTitleArea">No posts in topic</div>
+                        <div class="col-3"></div>
+                    }
+                    
+                </div>
+            }
+        }
+        else
+        {
+            <div class="row topicRow">
+                <div class="col-12">
+                    No Topics in Category
+                </div>
+            </div> 
+        }
+        <br><br>
+    }
+}
+else
+{
+    <p>No categories have been created yet.</p>
+}
+
+@if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
+{
+    <div id="confirmDeleteCategoryModal" class="modal">
+        <div class="modal-content">
+            <span class="modalClose" style="background-color:white;" onclick="closeDeleteCategoryModal()">&times;</span>
+            <p style="background-color:white;">Confirm deleting <span id="deleteCategoryName" style="background-color:white;"></span>?</p>
+            <form asp-controller="Forum" asp-action="DeleteCategory" id="deleteCategoryForm" method="post" style="background-color:white;">
+                <input type="hidden" id="deleteCategoryId" name="deleteCategoryId" />
+                <a class="removePostBtn" href="javascript:submitDeleteCategory()">Yes - Delete</a>
+                &nbsp;&nbsp;&nbsp;&nbsp;<a class="cancelRemovePostBtn" href="javascript:closeDeleteCategoryModal()">No - Cancel</a>
+            </form>
+            <br>
+        </div>
+    </div>
+
+    <div id="confirmDeleteTopicModal" class="modal">
+        <div class="modal-content">
+            <span class="modalClose" style="background-color:white;" onclick="closeDeleteTopicModal()">&times;</span>
+            <p style="background-color:white;">Confirm deleting <span id="deleteTopicName" style="background-color:white;"></span>?</p>
+            <form asp-controller="Forum" asp-action="DeleteTopic" id="deleteTopicForm" method="post" style="background-color:white;">
+                <input type="hidden" id="deleteTopicId" name="deleteTopicId" />
+                <a class="removePostBtn" href="javascript:submitDeleteTopic()">Yes - Delete</a>
+                &nbsp;&nbsp;&nbsp;&nbsp;<a class="cancelRemovePostBtn" href="javascript:closeDeleteTopicModal()">No - Cancel</a>
+            </form>
+            <br>
+        </div>
+    </div>
+
+    @section Scripts {
+        <partial name="_IndexAdminScriptsPartial" />
+    }
+}

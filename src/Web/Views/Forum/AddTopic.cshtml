@@ -1,0 +1,32 @@
+@using Whirl1.Entities;
+@model Category
+
+@{
+    ViewData["Title"] = "Add Topic" ;
+}
+
+@if (Model != null)
+{
+    @section ForumNavigation
+    {
+        > <a class="navLinks" asp-controller="Forum" asp-action="AddTopic" asp-route-id="@Model.Id">Add Topic</a>
+    }
+
+    <h1>Create new topic for category - @Model.Name</h1>
+
+    <form asp-controller="Forum" asp-action="AddTopic" method="post" id="addTopicForm">
+        <input type="hidden" id="categoryId" name="categoryId" value="@Model.Id" />
+        <label for="topicName">Name</label>
+        <input type="text" id="topicName" name="topicName" style="background-color:white;" onkeyup="checkAddTopic()" />
+        <br /><br />
+        <a class="submitCommentBtn" href="javascript:submitAddTopic()">Add Topic</a>
+    </form>
+    <br>
+    <div class="row">
+        <span id="addTopicValidation" name="addTopicValidation" style="color:red;"></span>
+    </div>
+}
+else
+{
+    <h1>Category doesn't exist</h1>
+}

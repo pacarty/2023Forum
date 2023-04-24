@@ -1,0 +1,197 @@
+@using Whirl1.Entities;
+@using Microsoft.AspNetCore.Authorization;
+@using System.Security.Claims;
+@inject IAuthorizationService authorizationService;
+@model Post
+
+@{
+    // Claim? test = User.Claims.Where(c => c.Type == "UserId").FirstOrDefault();
+    // to get string result, add .Value after FirstOrDefault()
+
+    if (@Model != null)
+    {
+        ViewData["Title"] = @Model.Title;
+    }
+    else
+    {
+        ViewData["Title"] = "Post Not Found";
+    }
+}
+
+<br>
+
+@if (@Model != null)
+{
+    int totalItems = ViewBag.totalItems;
+    int itemsPerPage = ViewBag.itemsPerPage;
+    int currentPage = ViewBag.currentPage;
+    int totalPages = ViewBag.totalPages;
+    int previous = ViewBag.previous;
+    int next = ViewBag.next;
+
+    @section ForumNavigation
+    {
+        > <a class="navLinks" asp-controller="Forum" asp-action="Topic" asp-route-id="@Model.Topic.Id">@Model.Topic.Name</a>
+        &nbsp;> <a class="navLinks" asp-controller="Forum" asp-action="Post" asp-route-id="@Model.Id">@Model.Title</a>
+    }
+
+    @if (@Model.Comments.Any())
+    {
+        int counter = (currentPage * itemsPerPage) - itemsPerPage;
+
+        @foreach (var comment in @Model.Comments)
+        {
+            counter++;
+
+            <div class="row postRow">
+                <div class="col-2">
+                    <div class="row topicTitleArea">#@counter</div>
+                    <div class="row topicTitleArea">
+                        <a class="navLinks" asp-controller="Forum" asp-action="UserInformation" asp-route-id="@comment.ApplicationUser.Id">@comment.ApplicationUser.Username</a>
+                    </div>
+                </div>
+                <div class="col-7">
+                    <div class="row">
+                        <div id="comment_show_@comment.Id">
+                            <div class="col-12 text-wrap" id="com_@comment.Id"><pre>@comment.Content</pre></div>
+                        </div>
+                        
+                        @if ((await authorizationService.AuthorizeAsync(User, comment.Id, "EditComment")).Succeeded)
+                        {
+                            <div id="comment_edit_@comment.Id" style="display:none">
+                                <form asp-controller="Forum" asp-action="EditComment" id="editCommentForm_@comment.Id" method="post">
+                                    <textarea id="editCommentContent" name="editCommentContent" rows="4" cols="50" style="background-color:white;" onkeyup="checkEditComment()">@comment.Content</textarea><br/>
+                                    <input type="hidden" id="editCommentId" name="editCommentId" value="@comment.Id"  />
+                                    <input type="hidden" id="currentPage" name="currentPage" value="@currentPage" />
+                                    &nbsp;<a class="editLinks" href="javascript:submitEditComment(@comment.Id)">Save</a>&nbsp;&nbsp;<a class="editLinks" href="javascript:cancelEdit('@comment.Id')">Cancel</a>
+                                </form>
+                                <br>
+                                <div class="row">
+                                    <span id="editCommentValidation" name="editCommentValidation" style="color:red;"></span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    @if ((await authorizationService.AuthorizeAsync(User, comment.Id, "DeleteComment")).Succeeded)
+                    {
+                        <br>
+                        <div class="row">
+                            <div class="col-12 nav" id="editDeleteDIV_@comment.Id">
+
+                            @if ((await authorizationService.AuthorizeAsync(User, comment.Id, "EditComment")).Succeeded)
+                            {
+                                <a class="editLinks" href="javascript:editComment('@comment.Id')">Edit</a>
+                            }
+                            
+                            &nbsp;<a class="editLinks" href="javascript:deleteComment('@comment.Id')">Delete</a>
+                            
+                            </div>
+                            <div class="col-12 nav" id="confirmDeleteDIV_@comment.Id" style="display:none">
+                                <span style="font-size:14px;">Confirm Delete?</span>&nbsp;&nbsp;
+                                <form asp-controller="Forum" asp-action="DeleteComment" id="deleteCommentForm_@comment.Id" method="post">
+                                    <input type="hidden" id="deleteCommentId" name="deleteCommentId" value="@comment.Id"  />
+                                    <input type="hidden" id="currentPage" name="currentPage" value="@currentPage" />
+                                    <a class="editLinks" href="javascript:submitDeleteComment(@comment.Id)">Yes</a>
+                                </form>
+                                &nbsp;/ <a class="editLinks" href="javascript:cancelDeleteComment('@comment.Id')">No</a>
+                            </div>
+                        </div>
+                    }
+                    
+                </div>
+                <div class="col-1"></div>
+                <div class="col-2 commentTime">@comment.CreatedTS</div>
+            </div>
+        }
+
+        @if ((await authorizationService.AuthorizeAsync(User, @Model.CategoryId, "IsValidUser")).Succeeded)
+        {
+            <br><br>
+            <form asp-controller="Forum" asp-action="AddComment" method="post" id="addCommentForm">
+                <div class="row postRow" style="border-style: none;">
+                    <div class="col-2"></div>
+                    <div class="col-7">
+                        <div class="row">
+                            <input type="hidden" id="postId" name="postId" value="@Model.Id" />
+                            <textarea id="content" name="content" rows="4" cols="50" style="background-color:white;" onkeyup="checkAddComment()"></textarea>
+                        </div>
+                        <br>
+                        <div class="row">
+                            <div class="col-4"><a class="submitCommentBtn" href="javascript:submitAddComment()">Submit</a></div>
+                        </div>
+                        <br>
+                        <div class="row">
+                            <span id="addCommentValidation" name="addCommentValidation" style="color:red;"></span>
+                        </div>
+                    </div>
+                    <div class="col-3"></div>
+                </div>
+            </form>
+        }
+        <br><br>
+        <div class="pagination">
+            @*Previous*@
+            @if (previous < 1)
+            {
+                // do nothing
+            }
+            else if (previous == 1)
+            {
+                <a asp-controller="Forum" asp-action="Post" asp-route-id="@Model.Id">&laquo;</a>
+            }
+            else
+            {
+                <a asp-controller="Forum" asp-action="Post" asp-route-id="@Model.Id" asp-route-page="@previous">&laquo;</a>
+            }
+
+            @*Pages*@
+            @if (totalPages > 1)
+            {
+                string activeClass = "";
+
+                if (currentPage == 1)
+                {
+                    activeClass = "active";
+                }
+                else
+                {
+                    activeClass = "";
+                }
+
+                <a class=@activeClass asp-controller="Forum" asp-action="Post" asp-route-id="@Model.Id">1</a>
+
+                @for (int i = 2; i <= totalPages; i++)
+                {
+                    if (currentPage == i)
+                    {
+                        activeClass = "active";
+                    }
+                    else
+                    {
+                        activeClass = "";
+                    }
+
+                    <a class=@activeClass asp-controller="Forum" asp-action="Post" asp-route-id="@Model.Id" asp-route-page="@i">@i</a>
+                }
+            }
+
+            @*Next*@
+            @if (next > totalPages)
+            {
+                // do nothing
+            } else
+            {
+                <a asp-controller="Forum" asp-action="Post" asp-route-id="@Model.Id" asp-route-page="@next">&raquo;</a>
+            }
+        </div>
+    }
+    else
+    {
+        <p>No comments in post.</p>
+    }
+}
+else
+{
+    <h1>Post doesn't exist</h1>
+}

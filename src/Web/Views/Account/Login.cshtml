@@ -1,0 +1,26 @@
+@{
+    ViewData["Title"] = "Login";
+}
+
+@section ForumNavigation
+{
+    > <a class="navLinks" asp-controller="Account" asp-action="Login">Login</a>
+}
+
+<h1>Log In</h1>
+<br>
+<form asp-controller="Account" asp-action="Login" method="post" id="loginForm">
+    <label for="loginUsername">Username</label>&nbsp;&nbsp;
+    <input type="text" id="loginUsername" name="loginUsername" style="background-color:white;" />
+    <br><br>
+
+    <label for="loginPassword">Password</label>&nbsp;&nbsp;
+    <input type="text" id="loginPassword" name="loginPassword" style="background-color:white;" />
+    <br><br>
+
+    <a class="submitCommentBtn" href="javascript:submitLogin()">Login</a>
+</form>
+<br>
+<div class="row">
+    <span id="loginValidation" name="loginValidation" style="color:red;"></span>
+</div>

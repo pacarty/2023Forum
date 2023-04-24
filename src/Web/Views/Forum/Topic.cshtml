@@ -1,0 +1,158 @@
+@using Whirl1.Entities;
+@using Microsoft.AspNetCore.Authorization;
+@inject IAuthorizationService authorizationService;
+@model Topic
+
+@{
+    if (@Model != null)
+    {
+        ViewData["Title"] = @Model.Name;
+    }
+    else
+    {
+        ViewData["Title"] = "Topic Not Found";
+    }
+}
+
+@if (Model != null)
+{
+    int totalItems = ViewBag.totalItems;
+    int itemsPerPage = ViewBag.itemsPerPage;
+    int currentPage = ViewBag.currentPage;
+    int totalPages = ViewBag.totalPages;
+    int previous = ViewBag.previous;
+    int next = ViewBag.next;
+    bool atLeastOnePostToRemove = false;
+
+    @section ForumNavigation
+    {
+        > <a class="navLinks" asp-controller="Forum" asp-action="Topic" asp-route-id="@Model.Id">@Model.Name</a>
+    }
+
+    @if ((await authorizationService.AuthorizeAsync(User, @Model.CategoryId, "IsValidUser")).Succeeded)
+    {
+        <p><a class="addBtn" asp-controller="Forum" asp-action="AddPost" asp-route-id="@Model.Id">Add Post</a></p>
+    }
+    else
+    {
+        <br>
+    }
+
+    @if (Model.Posts.Any())
+    {
+        @foreach (var post in @Model.Posts)
+        {
+            <div class="row postRow">
+                <div class="col-9 topicTitleArea">
+                    <a class="navLinks" asp-controller="Forum" asp-action="Post" asp-route-id="@post.Id">@post.Title</a>&nbsp;&nbsp;
+                    
+                    @if ((await authorizationService.AuthorizeAsync(User, post.Id, "DeletePost")).Succeeded)
+                    {
+                        atLeastOnePostToRemove = true;
+
+                        <a href="javascript:openDeletePostModal(@post.Id, '@post.Title')" class="removeBtn">Remove</a>
+                    }
+                </div>
+
+                @if (post.MostRecentComment != null)
+                {
+                    <div class="col-1"></div>
+                    <div class="col-2">
+                        <div class="row topicLastComment"><a class="postRightSideLinks" asp-controller="Forum" asp-action="Post" asp-route-id="@post.Id" asp-route-page="@post.LastPage" asp-fragment="com_@post.MostRecentComment.Id">@post.MostRecentComment.CreatedTS</a></div>
+
+                        <div class="row topicLastComment"><a class="postRightSideLinks" asp-controller="Forum" asp-action="UserInformation" asp-route-id="@post.MostRecentComment.ApplicationUser.Id">@post.MostRecentComment.ApplicationUser.Username</a></div>
+                    </div>
+                }
+                else
+                {
+                    <div class="col-3"> No comments in Post</div>
+                }
+            </div> 
+        }
+        <br><br>
+        <div class="pagination">
+            @*Previous*@
+            @if (previous < 1)
+            {
+                // do nothing
+            }
+            else if (previous == 1)
+            {
+                <a asp-controller="Forum" asp-action="Topic" asp-route-id="@Model.Id">&laquo;</a>
+            }
+            else
+            {
+                <a asp-controller="Forum" asp-action="Topic" asp-route-id="@Model.Id" asp-route-page="@previous">&laquo;</a>
+            }
+
+            @*Pages*@
+            @if (totalPages > 1)
+            {
+                string activeClass = "";
+
+                if (currentPage == 1)
+                {
+                    activeClass = "active";
+                }
+                else
+                {
+                    activeClass = "";
+                }
+
+                <a class=@activeClass asp-controller="Forum" asp-action="Topic" asp-route-id="@Model.Id">1</a>
+
+                @for (int i = 2; i <= totalPages; i++)
+                {
+                    if (currentPage == i)
+                    {
+                        activeClass = "active";
+                    }
+                    else
+                    {
+                        activeClass = "";
+                    }
+
+                    <a class=@activeClass asp-controller="Forum" asp-action="Topic" asp-route-id="@Model.Id" asp-route-page="@i">@i</a>
+                }
+            }
+
+            @*Next*@
+            @if (next > totalPages)
+            {
+                // do nothing
+            } else
+            {
+                <a asp-controller="Forum" asp-action="Topic" asp-route-id="@Model.Id" asp-route-page="@next">&raquo;</a>
+            }
+        </div>
+
+        @if (atLeastOnePostToRemove)
+        {
+            <div id="confirmDeletePostModal" class="modal">
+                <div class="modal-content">
+                    <span class="modalClose" style="background-color:white;" onclick="closeDeletePostModal()">&times;</span>
+                    <p style="background-color:white;">Confirm deleting <span id="deletePostTitle" style="background-color:white;"></span>?</p>
+                    <form asp-controller="Forum" asp-action="DeletePost" id="deletePostForm" method="post" style="background-color:white;">
+                        <input type="hidden" id="deletePostId" name="deletePostId" />
+                        <input type="hidden" id="currentPage" name="currentPage" value="@currentPage" />
+                        <a class="removePostBtn" href="javascript:submitDeletePost()">Yes - Delete</a>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<a class="cancelRemovePostBtn" href="javascript:closeDeletePostModal()">No - Cancel</a>
+                    </form>
+                    <br>
+                </div>
+            </div>
+
+            @section Scripts {
+                <partial name="_TopicAdminScriptsPartial" />
+            }
+        }
+    }
+    else
+    {
+        <p>No posts in topic.</p>
+    }
+}
+else
+{
+    <h1>Topic doesn't exist</h1>
+}

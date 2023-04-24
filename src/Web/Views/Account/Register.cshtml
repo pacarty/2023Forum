@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Register";
+}
+
+@section ForumNavigation
+{
+    > <a class="navLinks" asp-controller="Account" asp-action="Register">Register</a>
+}
+
+<h1>Register New User</h1>
+<br>
+<form asp-controller="Account" asp-action="Register" method="post" id="registerForm">
+    <label for="registerUsername">Username</label>&nbsp;&nbsp;
+    <input type="text" id="registerUsername" name="registerUsername" style="background-color:white;" />
+    <br><br>
+
+    <label for="registerPassword">Password</label>&nbsp;&nbsp;
+    <input type="text" id="registerPassword" name="registerPassword" style="background-color:white;" />
+    <br><br>
+
+    <label for="registerConfirmPassword">Confirm Password</label>&nbsp;&nbsp;
+    <input type="text" id="registerConfirmPassword" name="registerConfirmPassword" style="background-color:white;" />
+    <br><br>
+
+    <a class="submitCommentBtn" href="javascript:submitRegister()">Register</a>
+</form>
+<br>
+<div class="row">
+    <span id="registerValidation" name="registerValidation" style="color:red;"></span>
+</div>

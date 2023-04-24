@@ -1,0 +1,48 @@
+@using Whirl1.Entities;
+@using Microsoft.AspNetCore.Authorization;
+@inject IAuthorizationService authorizationService;
+@model ApplicationUser
+
+@{
+    ViewData["Title"] = "Admin";
+}
+
+@section ForumNavigation
+{
+    > <a class="navLinks" asp-controller="Admin" asp-action="Index">Admin</a>
+}
+<br>
+<div class="row">
+    <div class="col-6">
+        <p>
+            <a class="navLinks" asp-controller="Admin" asp-action="UserManagement">User Management</a>
+        </p>
+    </div>
+    <div class="col-6">
+        <p>Show Admin/Mod Controls</p>
+
+        @{
+            string yesOption = "";
+            string noOption = "";
+        }
+
+        @if (Model.ShowModControls)
+        {
+            yesOption = "checked";
+        }
+        else
+        {
+            noOption = "checked";
+        }
+
+        <form asp-controller="Admin" asp-action="EditShowModControls" method="post" id="editShowModControlsForm">
+            <input type="radio" id="yes" name="modControls" value="yes" @yesOption />
+            <label for="yes">Yes</label>
+            <br><br>
+            <input type="radio" id="no" name="modControls" value="no" @noOption />
+            <label for="no">No</label>
+            <br><br>
+            <a class="submitCommentBtn" href="javascript:submitEditShowModControls()">Save Changes</a>
+        </form>  
+    </div>
+</div>

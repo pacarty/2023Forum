@@ -1,0 +1,24 @@
+@using Whirl1.Entities;
+@model ApplicationUser
+
+@{
+    if (@Model != null)
+    {
+        ViewData["Title"] = "User - " + @Model.Username;
+    }
+    else
+    {
+        ViewData["Title"] = "User Not Found";
+    }
+    
+}
+
+@if (@Model != null)
+{
+    <p>@Model.Id</p>
+    <p>@Model.Username</p>
+}
+else
+{
+    <p>User doesn't exist.</p>
+}
