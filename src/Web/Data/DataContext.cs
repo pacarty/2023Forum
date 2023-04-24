@@ -1,9 +1,9 @@
-using Whirl1.Entities;
+using Forum.Entities;
 
 using Microsoft.EntityFrameworkCore;
 
 
-namespace Whirl1.Data;
+namespace Forum.Data;
 
 public class DataContext : DbContext
 {

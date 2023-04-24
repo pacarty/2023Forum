@@ -1,8 +1,8 @@
-using Whirl1.Services;
+using Forum.Services;
 
 using Microsoft.AspNetCore.Authorization;
 
-namespace Whirl1.Security;
+namespace Forum.Security;
 
 public class DeleteCommentHandler : AuthorizationHandler<DeleteCommentRequirement, int>
 {

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Whirl1.Entities;
+namespace Forum.Entities;
 
 public class Category
 {

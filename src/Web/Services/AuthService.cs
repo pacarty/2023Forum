@@ -1,10 +1,10 @@
-using Whirl1.Data;
-using Whirl1.Entities;
+using Forum.Data;
+using Forum.Entities;
 
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace Whirl1.Services;
+namespace Forum.Services;
 
 public interface IAuthService
 {

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 
-namespace Whirl1.Security;
+namespace Forum.Security;
 
 public class IsValidUserRequirement : IAuthorizationRequirement
 {

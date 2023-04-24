@@ -1,6 +1,6 @@
-using Whirl1.Data;
-using Whirl1.Entities;
-using Whirl1.Services;
+using Forum.Data;
+using Forum.Entities;
+using Forum.Services;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication;
 
-namespace Whirl1.Controllers;
+namespace Forum.Controllers;
 
 public class AccountController : Controller
 {

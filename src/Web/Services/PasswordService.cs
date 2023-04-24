@@ -1,6 +1,6 @@
 
 
-namespace Whirl1.Services;
+namespace Forum.Services;
 
 public interface IPasswordService
 {

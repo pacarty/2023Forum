@@ -1,4 +1,4 @@
-namespace Whirl1.Entities;
+namespace Forum.Entities;
 
 public class ApplicationUser
 {

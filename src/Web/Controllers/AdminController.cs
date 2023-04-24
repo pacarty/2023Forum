@@ -1,5 +1,5 @@
-using Whirl1.Data;
-using Whirl1.Entities;
+using Forum.Data;
+using Forum.Entities;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication;
 
-namespace Whirl1.Controllers;
+namespace Forum.Controllers;
 
 [Authorize(Policy = "IsManager")]
 public class AdminController : Controller

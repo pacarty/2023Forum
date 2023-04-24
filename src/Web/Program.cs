@@ -1,6 +1,6 @@
-using Whirl1.Data;
-using Whirl1.Services;
-using Whirl1.Security;
+using Forum.Data;
+using Forum.Services;
+using Forum.Security;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;

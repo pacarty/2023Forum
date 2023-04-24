@@ -1,10 +1,10 @@
-using Whirl1.Data;
-using Whirl1.Entities;
+using Forum.Data;
+using Forum.Entities;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
-namespace Whirl1.Security;
+namespace Forum.Security;
 
 public class CustomCookieAuthenticationEvents : CookieAuthenticationEvents
 {
