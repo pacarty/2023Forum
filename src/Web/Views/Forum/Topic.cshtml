@@ -131,7 +131,7 @@
             <div id="confirmDeletePostModal" class="modal">
                 <div class="modal-content">
                     <span class="modalClose" style="background-color:white;" onclick="closeDeletePostModal()">&times;</span>
-                    <p style="background-color:white;">Confirm deleting <span id="deletePostTitle" style="background-color:white;"></span>?</p>
+                    <p style="background-color:white;">Confirm deleting <span id="deletePostTitle" style="background-color:white;"></span>&#63;</p>
                     <form asp-controller="Forum" asp-action="DeletePost" id="deletePostForm" method="post" style="background-color:white;">
                         <input type="hidden" id="deletePostId" name="deletePostId" />
                         <input type="hidden" id="currentPage" name="currentPage" value="@currentPage" />
