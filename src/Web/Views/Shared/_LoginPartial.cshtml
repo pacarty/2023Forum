@@ -1,25 +1,32 @@
+@*
+The html in this page is rendered in place of the _LoginPartial tag that is defined in the _Layout.cshtml page.
+The code in this file is displayed in the navigation bar. If a user is logged in, or not logged in, the relevant links are displayed.
+*@
+
 @using Microsoft.AspNetCore.Authorization;
 @inject IAuthorizationService authorizationService;
 
 @{
-    bool isLoggedIn = false;
-    string? currentUserId;
-    string? currentUsername;
+    bool isLoggedIn = false; // Initialising to false as default. If there is a user logged in it will be true.
+    string? currentUserId; // If a user is logged in, this will hold the Id of that user. Otherwise it is null.
+    string? currentUsername; // Same as above, but for the username.
 
+    // We check the context of the current request and get the current user principal. We then get the Identity of this principal, and check if this identity is currently authenticated.
     if (Context.User.Identity.IsAuthenticated)
     {
-        isLoggedIn = true;
-        currentUserId = Context.User.Claims.FirstOrDefault(c => c.Type == "UserId").Value;
-        currentUsername = Context.User.Claims.FirstOrDefault(c => c.Type == "Username").Value;
+        isLoggedIn = true; // There is a user logged in (authenticated), so this value is true.
+        currentUserId = Context.User.Claims.FirstOrDefault(c => c.Type == "UserId").Value;  // If authenticated, the user will have a UserId claim. currentUserId is now set to its value.
+        currentUsername = Context.User.Claims.FirstOrDefault(c => c.Type == "Username").Value; // Same as above, but for username.
     }
     else
     {
+        // If not authenticated, these false and null values apply.
         isLoggedIn = false;
         currentUserId = null;
         currentUsername = null;
     }
 }
-
+@* If the user is not authenticated, we display links to the Register and Login pages. *@
 @if (!isLoggedIn)
 {
     <p>
@@ -27,18 +34,22 @@
         <a class="navLinks" asp-controller="Account" asp-action="Login">Login</a>
     </p>
 }
+@* else block for if user is logged in *@
 else
 {
     <p>
+        @* If the IsManager policy is successful, we display the Admin link. IsManager checks if the current user claim of the name Role has the value of either Root, Admin or Moderator. *@
         @if ((await authorizationService.AuthorizeAsync(User, "IsManager")).Succeeded)
         {
             <a class="navLinks" asp-controller="Admin" asp-action="Index">Admin</a>
         }
+        @* Because we are posting data (logging out requires us to call signoutasync which changes claims) we are required to use a form. Inside the form we simply have the logout link which will route to the Logout action, sign out the current user, and redirect to the appropriate page. *@
         <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm" style="display:inline;">
             <a class="navLinks" href="javascript:submitLogout()">Logout</a>&nbsp;&nbsp;&nbsp;
         </form>
-
+        @* Links to settings page which has not been created yet. TODO: Create user settings page where they can edit things like password, name, etc. *@
         <a class="navLinks" href="#">Settings</a>&nbsp;&nbsp;&nbsp;
+        @* Links to the page that displays a users information. Here it links to the current user, and displays the currents users name as the link. *@
         <a class="navLinks" asp-controller="Forum" asp-action="UserInformation" asp-route-id="@currentUserId">@currentUsername</a>
     </p>
 }
