@@ -1,3 +1,7 @@
+@*
+This is the default landing page, as specified in MapControllerRoute in Program.cs.
+*@
+
 @using Forum.Entities;
 @using Microsoft.AspNetCore.Authorization;
 @using System.Security.Claims;
@@ -9,25 +13,29 @@
 }
 
 <br>
-
+@* Checking policy, only Root/Admin users with mod controls turned on should be able to see Add Category *@
 @if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
 {
     <div class="row">
         <p><a class="addBtn" asp-controller="Forum" asp-action="AddCategory">Add Category</a></p>
     </div>
 }
-
+@* Check if the model, which is List<Category> has any elements. *@
 @if (Model.Any())
 {
+    @* Loop through each category in the list, display the Name property. *@
     @foreach (var category in @Model)
     {
         <div class="row categoryHeader">
             <div class="col-6 categoryTitle">@category.Name &nbsp;&nbsp;
+                @* Checking policy, only Root/Admin users with mod controls turned on should be able to see Remove Category *@
                 @if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
                 {
+                    @* There is an if block at the bottom of this page, requiring the IsRootOrAdmin policy to be satisfied. If it is, then the html for the modal is rendered, and so is the scripts section which references the indexAdmin.js file which contains the openDeleteCategoryModal() function. *@
                     <a href="javascript:openDeleteCategoryModal(@category.Id, '@category.Name')" class="removeBtn">Remove</a>
                 }
             </div>
+            @* Only Root/Admin users can Add Topic *@
             @if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
             {
                 <div class="col-6 addTopicArea">
@@ -35,28 +43,47 @@
                 </div>
             }
         </div>
-
+        @* Check if the category's List<Topic> property has any elements. *@
         @if (category.Topics.Any())
-        {
+        {   @* Loop through each topic in the list, display the Name property. *@
             @foreach (var topic in category.Topics)
             {
                 <div class="row topicRow">
                     <div class="col-5 topicTitleArea"><a class="navLinks" asp-controller="Forum" asp-action="Topic" asp-route-id="@topic.Id">@topic.Name</a>&nbsp;&nbsp;
-                    
+                    @* Checking policy, only Root/Admin users with mod controls turned on should be able to see Remove Topic *@
                     @if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
                     {
+                        @* This works the same as the delete category modal, the html for delete topic modal is in the same if block at the bottom of this page, and the js is in the referenced indexAdmin.js file. *@
                         <a href="javascript:openDeleteTopicModal(@topic.Id, '@topic.Name')" class="removeBtn">Remove</a>
                     }
                 </div>
-                    
+                    @* 
+                    MostRecentCommentedPost is of type Post.
+                    Here we are displaying a link to the post which has the most recent active comment. If this is null we assume there are no posts in the topic.
+                     *@
                     @if (topic.MostRecentCommentedPost != null)
                     {
-                        <div class="col-4 postTitleArea"><a class="navLinks" asp-controller="Forum" asp-action="Post" asp-route-id="@topic.MostRecentCommentedPost.Id">@topic.MostRecentCommentedPost.Title</a></div>
+                        <div class="col-4 postTitleArea">
+                            <a class="navLinks" asp-controller="Forum" asp-action="Post" asp-route-id="@topic.MostRecentCommentedPost.Id">@topic.MostRecentCommentedPost.Title</a>
+                        </div>
                         <div class="col-1"></div>
                         <div class="col-2">
-                            <div class="row topicLastComment"><a class="postRightSideLinks" asp-controller="Forum" asp-action="Post" asp-route-id="@topic.MostRecentCommentedPost.Id" asp-route-page="@topic.MostRecentCommentedPost.LastPage" asp-fragment="com_@topic.MostRecentCommentedPost.MostRecentComment.Id">@topic.MostRecentCommentedPost.MostRecentComment.CreatedTS</a></div>
-
-                            <div class="row topicLastComment"><a class="postRightSideLinks" asp-controller="Forum" asp-action="UserInformation" asp-route-id="@topic.MostRecentCommentedPost.MostRecentComment.ApplicationUser.Id">@topic.MostRecentCommentedPost.MostRecentComment.ApplicationUser.Username</a></div>
+                            <div class="row topicLastComment">
+                                @*
+                                This links to the Post page whose id = the id of the recent post. We want to jump to the position of the most recent comment, so we get the Posts LastPage property, which is an int that will take us to the last page.
+                                The fragment part starts with com_ and appends an id to it. Getting the Id: First we get the Posts MostRecentComment property, which is a Comment type. We then take that Comments Id property. This id gets appended to com_ to make something like com_3.
+                                In Post.cshtml, each comment's div has the id com_x where x = the id of that comment. With fragment, it means when this link is clicked, it appends #com_x to the url, which means it jumps straight to (positions the top of the page at) that html element.
+                                TODO: Instead of CreatedTS We will show the MostRecentComment's HowLongAgo property, which signifys time since CreatedTS.
+                                *@
+                                <a class="postRightSideLinks" asp-controller="Forum" asp-action="Post" asp-route-id="@topic.MostRecentCommentedPost.Id" asp-route-page="@topic.MostRecentCommentedPost.LastPage" asp-fragment="com_@topic.MostRecentCommentedPost.MostRecentComment.Id">@topic.MostRecentCommentedPost.MostRecentComment.CreatedTS</a>
+                            </div>
+                            <div class="row topicLastComment">
+                                @*
+                                We take the Posts MostRecentComment property (which is a Comment type). From that comment we get the ApplicationUser property. Then we get the ApplicationUser's Id.
+                                This link then directs to the UserInformation action with the aforementioned ApplicationUser's Id. We then also take the ApplicationUser's Username property and display it inside the anchor tag.
+                                *@
+                                <a class="postRightSideLinks" asp-controller="Forum" asp-action="UserInformation" asp-route-id="@topic.MostRecentCommentedPost.MostRecentComment.ApplicationUser.Id">@topic.MostRecentCommentedPost.MostRecentComment.ApplicationUser.Username</a>
+                            </div>
                         </div>
                     }
                     else
@@ -84,15 +111,25 @@ else
     <p>No categories have been created yet.</p>
 }
 
+@*
+The confirm delete category and topic modals referenced earlier are implemented here at the bottom of the page.
+IsRootOrAdmin policy must be satisfied for the html code to be written on the page.
+When remove category or remove topic is selected, the js function (either openDeleteCategoryModal() or openDeleteTopicModal()) is called, and the appropriate modal has its display set to block. As per app.css their display is set to none by default.
+*@
 @if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
 {
     <div id="confirmDeleteCategoryModal" class="modal">
         <div class="modal-content">
+            @* The modals display is set to none *@
             <span class="modalClose" style="background-color:white;" onclick="closeDeleteCategoryModal()">&times;</span>
+            @* The function that opens this modal, openDeleteCategoryModal(id,name) sets the innerText of the below span to the name that is passed to it *@
             <p style="background-color:white;">Confirm deleting <span id="deleteCategoryName" style="background-color:white;"></span>&#63;</p>
             <form asp-controller="Forum" asp-action="DeleteCategory" id="deleteCategoryForm" method="post" style="background-color:white;">
+                @* deleteCategoryId is set to the id that is passed in to the function that calls this modal, openDeleteCategoryModal(id,name) *@
                 <input type="hidden" id="deleteCategoryId" name="deleteCategoryId" />
+                @* This js function simply submits the form *@
                 <a class="removePostBtn" href="javascript:submitDeleteCategory()">Yes - Delete</a>
+                @* The modals display is set to none *@
                 &nbsp;&nbsp;&nbsp;&nbsp;<a class="cancelRemovePostBtn" href="javascript:closeDeleteCategoryModal()">No - Cancel</a>
             </form>
             <br>
@@ -101,18 +138,24 @@ else
 
     <div id="confirmDeleteTopicModal" class="modal">
         <div class="modal-content">
+            @* The modals display is set to none *@
             <span class="modalClose" style="background-color:white;" onclick="closeDeleteTopicModal()">&times;</span>
+            @* The function that opens this modal, openDeleteTopicModal(id,name) sets the innerText of the below span to the name that is passed to it *@
             <p style="background-color:white;">Confirm deleting <span id="deleteTopicName" style="background-color:white;"></span>&#63;</p>
             <form asp-controller="Forum" asp-action="DeleteTopic" id="deleteTopicForm" method="post" style="background-color:white;">
+                @* deleteTopicId is set to the id that is passed in to the function that calls this modal, openDeleteTopicModal(id,name) *@
                 <input type="hidden" id="deleteTopicId" name="deleteTopicId" />
+                @* This js function simply submits the form *@
                 <a class="removePostBtn" href="javascript:submitDeleteTopic()">Yes - Delete</a>
+                @* The modals display is set to none *@
                 &nbsp;&nbsp;&nbsp;&nbsp;<a class="cancelRemovePostBtn" href="javascript:closeDeleteTopicModal()">No - Cancel</a>
             </form>
             <br>
         </div>
     </div>
 
+    @* This scripts section is placed here inside the if block to ensure that the indexAdmin.js file (which contains the js relating to the deleting category/topic modals) is only rendered if the user is root or admin *@
     @section scripts {
-        <partial name="_IndexAdminScriptsPartial" />
+        <script src="~/js/indexAdmin.js" asp-append-version="true"></script>
     }
 }
