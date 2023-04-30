@@ -74,6 +74,7 @@ This is the default landing page, as specified in MapControllerRoute in Program.
                                 The fragment part starts with com_ and appends an id to it. Getting the Id: First we get the Posts MostRecentComment property, which is a Comment type. We then take that Comments Id property. This id gets appended to com_ to make something like com_3.
                                 In Post.cshtml, each comment's div has the id com_x where x = the id of that comment. With fragment, it means when this link is clicked, it appends #com_x to the url, which means it jumps straight to (positions the top of the page at) that html element.
                                 TODO: Instead of CreatedTS We will show the MostRecentComment's HowLongAgo property, which signifys time since CreatedTS.
+                                Note: We do not need to check if MostRecentCommentedPost.MostRecentComment is null because in the controller, MostRecentCommentedPost will also be null if there are no comments in the topic.
                                 *@
                                 <a class="postRightSideLinks" asp-controller="Forum" asp-action="Post" asp-route-id="@topic.MostRecentCommentedPost.Id" asp-route-page="@topic.MostRecentCommentedPost.LastPage" asp-fragment="com_@topic.MostRecentCommentedPost.MostRecentComment.Id">@topic.MostRecentCommentedPost.MostRecentComment.CreatedTS</a>
                             </div>

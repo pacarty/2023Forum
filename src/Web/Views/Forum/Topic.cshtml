@@ -1,8 +1,14 @@
+@*
+The Topic model has List<Post>. We are showing the posts where post.TopicId = id that was passed into the Topic action.
+Then we start the list from the index of: (number of posts we want to display) * (page number that is passed to Topic action - 1). If no page number is passed in, we assume it is the first page. From that index we take (number of posts we want to display).
+*@
+
 @using Forum.Entities;
 @using Microsoft.AspNetCore.Authorization;
 @inject IAuthorizationService authorizationService;
 @model Topic
 
+@* Model.Name will be undefined if Model is null, so we need to make this check first *@
 @{
     if (@Model != null)
     {
@@ -14,21 +20,26 @@
     }
 }
 
+@* Checking if Topic is valid and exists, because if not, everything will be undefined (including ViewBag, because those varibles don't get defined in the action if Topic doesn't exist) and cause errors. *@
 @if (Model != null)
 {
+    @* Defining pagination variables here so we get the correct type and also don't have to type ViewBag to access them every time. *@
     int totalItems = ViewBag.totalItems;
     int itemsPerPage = ViewBag.itemsPerPage;
     int currentPage = ViewBag.currentPage;
     int totalPages = ViewBag.totalPages;
     int previous = ViewBag.previous;
     int next = ViewBag.next;
+
+    @* Defining this variable (which is used later to determine if we render confirmDeletePostModal code) so that it is scoped to the entire page *@
     bool atLeastOnePostToRemove = false;
 
+    @* The html inside this block is rendered where the ForumNavigation tag is defined in the _Layout.cshtml file *@
     @section ForumNavigation
     {
         > <a class="navLinks" asp-controller="Forum" asp-action="Topic" asp-route-id="@Model.Id">@Model.Name</a>
     }
-
+    @* Checking policy, only logged in valid users (not banned) can add a post *@
     @if ((await authorizationService.AuthorizeAsync(User, @Model.CategoryId, "IsValidUser")).Succeeded)
     {
         <p><a class="addBtn" asp-controller="Forum" asp-action="AddPost" asp-route-id="@Model.Id">Add Post</a></p>
@@ -37,29 +48,38 @@
     {
         <br>
     }
-
+    @* Check if the models List<Post> property has any elements. *@ 
     @if (Model.Posts.Any())
     {
+        @* Loop through each post in list, display the Title property. *@
         @foreach (var post in @Model.Posts)
         {
             <div class="row postRow">
                 <div class="col-9 topicTitleArea">
                     <a class="navLinks" asp-controller="Forum" asp-action="Post" asp-route-id="@post.Id">@post.Title</a>&nbsp;&nbsp;
-                    
+                    @* Checking to see if DeletePost policy is satisfied *@
                     @if ((await authorizationService.AuthorizeAsync(User, post.Id, "DeletePost")).Succeeded)
                     {
+                        @* There is an if block at the bottom of this page, requiring the Delete policy to be satisfied. However, we can't simply run the if-authorized statement there because we don't have access to the post.Id variable required for the policy handler. Therefore, we set atLeastOnePostToRemove to true inside this block. This is because if at least 1 post has the ability to be removed, then the modal needs to be rendered as well as the scripts section which references the topicAdmin.js file which contains the openDeletePostModal() function. *@
                         atLeastOnePostToRemove = true;
-
                         <a href="javascript:openDeletePostModal(@post.Id, '@post.Title')" class="removeBtn">Remove</a>
                     }
                 </div>
-
                 @if (post.MostRecentComment != null)
                 {
                     <div class="col-1"></div>
                     <div class="col-2">
+                        @*
+                        We want to jump to the position of the most recent comment, so we get the Posts LastPage property, which is an int that will take us to the last page.
+                        The fragment part starts with com_ and appends an id to it. Getting the Id: First we get the Posts MostRecentComment property, which is a Comment type. We then take that Comments Id property. This id gets appended to com_ to make something like com_3.
+                        In Post.cshtml, each comment's div has the id com_x where x = the id of that comment. With fragment, it means when this link is clicked, it appends #com_x to the url, which means it jumps straight to (positions the top of the page at) that html element.
+                        TODO: Instead of CreatedTS We will show the MostRecentComment's HowLongAgo property, which signifys time since CreatedTS.
+                        *@
                         <div class="row topicLastComment"><a class="postRightSideLinks" asp-controller="Forum" asp-action="Post" asp-route-id="@post.Id" asp-route-page="@post.LastPage" asp-fragment="com_@post.MostRecentComment.Id">@post.MostRecentComment.CreatedTS</a></div>
-
+                        @*
+                        We take the Posts MostRecentComment property (which is a Comment type). From that comment we get the ApplicationUser property. Then we get the ApplicationUser's Id.
+                        This link then directs to the UserInformation action with the aforementioned ApplicationUser's Id. We then also take the ApplicationUser's Username property and display it inside the anchor tag.
+                        *@
                         <div class="row topicLastComment"><a class="postRightSideLinks" asp-controller="Forum" asp-action="UserInformation" asp-route-id="@post.MostRecentComment.ApplicationUser.Id">@post.MostRecentComment.ApplicationUser.Username</a></div>
                     </div>
                 }
@@ -74,22 +94,29 @@
             @*Previous*@
             @if (previous < 1)
             {
-                // do nothing
+                // If previous page is less than 1, then it doesn't exist, so don't display link.
+                // This also ensures that it doesn't display if there is only 1 page (pagination bar isn't shown).
             }
             else if (previous == 1)
             {
+                // If previous is 1, it is the default (first) page for that topic, so display link to topic page without page variable.
                 <a asp-controller="Forum" asp-action="Topic" asp-route-id="@Model.Id">&laquo;</a>
             }
             else
             {
+                // Otherwise, display the previous icon, which links to the topic with the current id and page = previous.
                 <a asp-controller="Forum" asp-action="Topic" asp-route-id="@Model.Id" asp-route-page="@previous">&laquo;</a>
             }
 
             @*Pages*@
+            @* Only display links if there is more than 1 page *@
             @if (totalPages > 1)
             {
+                // when an anchor tags class=active, its number is highlighted so signify that we are on that page.
+                // declare variable here so it has scope in this whole if block.
                 string activeClass = "";
 
+                // If we are on the default (first) page, set the activeClass string to active.
                 if (currentPage == 1)
                 {
                     activeClass = "active";
@@ -99,10 +126,13 @@
                     activeClass = "";
                 }
 
+                // For the default (first) page, display link to topic page without page variable.
                 <a class=@activeClass asp-controller="Forum" asp-action="Topic" asp-route-id="@Model.Id">1</a>
 
+                // For the rest of the pages (we've already done page 1, so we start with index = 2), loop through and display the links, with the difference here being we now add asp-route-page, because the page will not be the default page 1.
                 @for (int i = 2; i <= totalPages; i++)
                 {
+                    // If the index is the current page, set the activeClass string to active.
                     if (currentPage == i)
                     {
                         activeClass = "active";
@@ -112,6 +142,7 @@
                         activeClass = "";
                     }
 
+                    // asp-route-page links to what the current index is.
                     <a class=@activeClass asp-controller="Forum" asp-action="Topic" asp-route-id="@Model.Id" asp-route-page="@i">@i</a>
                 }
             }
@@ -119,29 +150,41 @@
             @*Next*@
             @if (next > totalPages)
             {
-                // do nothing
+                // If next page is greater than totalPages, then it doesn't exist, so don't display link.
             } else
             {
+                // Otherwise, display the next icon, which links to the topic with the current id and page = next.
                 <a asp-controller="Forum" asp-action="Topic" asp-route-id="@Model.Id" asp-route-page="@next">&raquo;</a>
             }
         </div>
 
+        @*
+        The confirm delete post modal referenced earlier is implemented here at the bottom of the page.
+        The if block which renders the link to delete a post satisfies the DeletePost policy, and so inside that if block we set atLeatOnePostToRemove to be true. atLeatOnePostToRemove must be true for the confirmDeletePostModal html and scripts section to be written on the page.
+        When remove post is selected, the openDeletePostModal() js function is called, and the confirmDeletePostModal div has its display set to block. As per app.css its display is set to none by default.
+        *@
         @if (atLeastOnePostToRemove)
         {
             <div id="confirmDeletePostModal" class="modal">
                 <div class="modal-content">
+                    @* The modals display is set to none *@
                     <span class="modalClose" style="background-color:white;" onclick="closeDeletePostModal()">&times;</span>
+                    @* The function that opens this modal, openDeletePostModal(id,title) sets the innerText of the below span to the title that is passed to it *@
                     <p style="background-color:white;">Confirm deleting <span id="deletePostTitle" style="background-color:white;"></span>&#63;</p>
                     <form asp-controller="Forum" asp-action="DeletePost" id="deletePostForm" method="post" style="background-color:white;">
+                        @* deletePostId is set to the id that is passed in to the function that calls this modal, openDeletePostModal(id,title) *@
                         <input type="hidden" id="deletePostId" name="deletePostId" />
                         <input type="hidden" id="currentPage" name="currentPage" value="@currentPage" />
+                        @* This js function simply submits the form *@
                         <a class="removePostBtn" href="javascript:submitDeletePost()">Yes - Delete</a>
+                        @* The modals display is set to none *@
                         &nbsp;&nbsp;&nbsp;&nbsp;<a class="cancelRemovePostBtn" href="javascript:closeDeletePostModal()">No - Cancel</a>
                     </form>
                     <br>
                 </div>
             </div>
 
+            @* This scripts section is placed here inside the if block to ensure that the topicAdmin.js file (which contains the js relating to the deleting post modal) is only rendered if the atLeastOnePostToRemove variable is true (which means the DeletePost policy is satisfied). *@
             @section scripts {
                 <script src="~/js/topicAdmin.js" asp-append-version="true"></script>
             }
