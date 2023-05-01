@@ -38,7 +38,6 @@ public class AccountController : Controller
         }
 
         byte[] passwordHash, passwordSalt;
-        //CreatePasswordHash(registerPassword, out passwordHash, out passwordSalt);
         _passwordService.CreatePasswordHash(registerPassword, out passwordHash, out passwordSalt);
 
         DateTime currentTime = DateTime.UtcNow;
@@ -51,13 +50,13 @@ public class AccountController : Controller
             PasswordSalt = passwordSalt,
             Role = "User",
             CreatedTS = unixTime,
-            LastChanged = unixTime,
             ShowModControls = false
         };
 
         await _context.ApplicationUsers.AddAsync(user);
         await _context.SaveChangesAsync();
 
+        // TODO: Redirect to another page which thanks user for registering and tells them to go to login page.
         return RedirectToAction("Index", "Forum");
     }
 
@@ -82,16 +81,12 @@ public class AccountController : Controller
             return View(null);
         }
 
-        DateTime currentTime = DateTime.UtcNow;
-        long unixTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
-
         var claims = new List<Claim>
         {
             new Claim("UserId", user.Id.ToString()),
             new Claim("Username", user.Username),
             new Claim("Role", user.Role),
-            new Claim("ShowModControls", user.ShowModControls.ToString()),
-            new Claim("LastChanged", unixTime.ToString())
+            new Claim("ShowModControls", user.ShowModControls.ToString())
         };
 
         var claimsIdentitiy = new ClaimsIdentity(claims, "WhirlAuth");

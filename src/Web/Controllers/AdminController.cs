@@ -165,9 +165,6 @@ public class AdminController : Controller
 
         ApplicationUser editUser = await _context.ApplicationUsers.FindAsync(userId);
 
-        DateTime currentTime = DateTime.UtcNow;
-        long unixTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
-
         foreach (Category category in await _context.Categories.Where(c => c.IsActive).ToListAsync())
         {
             ModeratorLink moderatorLink = await _context.ModeratorLinks.Where(m => m.ApplicationUserId == userId && m.CategoryId == category.Id).FirstOrDefaultAsync();
@@ -219,8 +216,6 @@ public class AdminController : Controller
         }
 
         editUser.Role = role;
-        editUser.LastChanged = unixTime;
-
         await _context.SaveChangesAsync();
 
         return RedirectToAction("Index", "Forum");
@@ -235,11 +230,6 @@ public class AdminController : Controller
         {
             return new ForbidResult();
         }
-
-        ApplicationUser editUser = await _context.ApplicationUsers.FindAsync(userId);
-
-        DateTime currentTime = DateTime.UtcNow;
-        long unixTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
 
         foreach (Category category in await _context.Categories.Where(c => c.IsActive).ToListAsync())
         {
@@ -291,9 +281,6 @@ public class AdminController : Controller
             }
         }
 
-        editUser.LastChanged = unixTime;
-        await _context.SaveChangesAsync();
-
         return RedirectToAction("Index", "Forum");
     }
 
@@ -328,16 +315,12 @@ public class AdminController : Controller
 
         // Refreshing User so they don't have to log out and log back in to use mod controls
 
-        DateTime currentTime = DateTime.UtcNow;
-        long unixTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
-
         var claims = new List<Claim>
         {
             new Claim("UserId", currentUser.Id.ToString()),
             new Claim("Username", currentUser.Username),
             new Claim("Role", currentUser.Role),
-            new Claim("ShowModControls", currentUser.ShowModControls.ToString()),
-            new Claim("LastChanged", unixTime.ToString())
+            new Claim("ShowModControls", currentUser.ShowModControls.ToString())
         };
 
         var claimsIdentitiy = new ClaimsIdentity(claims, "WhirlAuth");

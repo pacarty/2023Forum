@@ -1,0 +1,3 @@
+- After comment/post had been submitted, redirect to same page.
+- Validation for login page.
+- Register and login password fields should be password type.

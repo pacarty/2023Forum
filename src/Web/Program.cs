@@ -19,7 +19,6 @@ builder.Services.AddAuthentication("WhirlAuth")
     .AddCookie("WhirlAuth", options =>
     {
         options.Cookie.Name = "WhirlCookie";
-        //options.EventsType = typeof(CustomCookieAuthenticationEvents);
     });
 
 builder.Services.AddAuthorization(options =>
@@ -53,8 +52,6 @@ builder.Services.AddTransient<IAuthorizationHandler, IsHigherAuthorityHandler>()
 builder.Services.AddTransient<IAuthorizationHandler, EditCommentHandler>();
 builder.Services.AddTransient<IAuthorizationHandler, DeleteCommentHandler>();
 builder.Services.AddTransient<IAuthorizationHandler, DeletePostHandler>();
-
-//builder.Services.AddTransient<CustomCookieAuthenticationEvents>();
 
 var app = builder.Build();
 

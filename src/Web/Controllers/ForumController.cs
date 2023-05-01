@@ -49,7 +49,6 @@ public class ForumController : Controller
                 PasswordSalt = passwordSalt,
                 Role = "Root",
                 CreatedTS = unixTime,
-                LastChanged = unixTime,
                 ShowModControls = true
             };
 
