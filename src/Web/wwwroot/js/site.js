@@ -46,7 +46,27 @@ function submitLogin() {
 		return;
 	}
 
-	document.getElementById("loginForm").submit();
+	$.ajax({
+		type: "GET",
+		url: "/Account/VerifyUser",
+		data: {
+			username: userField,
+			password: passwordField
+		},
+		dataType: "text",
+		success: function (isUserAuthorized) {
+			if (isUserAuthorized == "" || isUserAuthorized == null) {
+				validationElement.innerText = "username or password is incorrect";
+				return;
+			} else {
+				document.getElementById("loginForm").submit();
+				return;
+			}
+		},
+		error: function (req, status, error) {
+			console.log(error);
+		}
+	});
 }
 
 function submitLogout() {

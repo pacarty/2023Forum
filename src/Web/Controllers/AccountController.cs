@@ -69,17 +69,9 @@ public class AccountController : Controller
     [HttpPost]
     public async Task<IActionResult> Login(string loginUsername, string loginPassword)
     {
-        var user = await _context.ApplicationUsers.SingleOrDefaultAsync(u => u.Username == loginUsername && u.Role != "Banned");
+        ApplicationUser user = await VerifyUser(loginUsername, loginPassword);
 
-        if (user == null)
-        {
-            return View(null);
-        }
-
-        if (!_passwordService.VerifyPasswordHash(loginPassword, user.PasswordHash, user.PasswordSalt))
-        {
-            return View(null);
-        }
+        if (user == null) return new BadRequestResult();
 
         var claims = new List<Claim>
         {
@@ -109,5 +101,22 @@ public class AccountController : Controller
     public async Task<bool> TestIfUserExists(string username)
     {
         return await _context.ApplicationUsers.AnyAsync(u => u.Username == username);
+    }
+
+    [HttpGet]
+    public async Task<ApplicationUser> VerifyUser(string username, string password)
+    {
+        var user = await _context.ApplicationUsers.SingleOrDefaultAsync(u => u.Username == username && u.Role != "Banned");
+
+        if (user == null) return null;
+
+        if (_passwordService.VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+        {
+            return user;
+        }
+        else
+        {
+            return null;
+        }
     }
 }
