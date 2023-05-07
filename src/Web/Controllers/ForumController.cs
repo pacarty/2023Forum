@@ -77,7 +77,10 @@ public class ForumController : Controller
                 else
                 {
                     mostRecentComment.ApplicationUser = await _context.ApplicationUsers.FindAsync(mostRecentComment.ApplicationUserId);
-                    // here do mostRecentComment.HowLongAgo. do calc and string conversion with unixTime variable.
+
+                    DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                    DateTime date = start.AddMilliseconds(mostRecentComment.CreatedTS * 1000).ToLocalTime();
+                    mostRecentComment.HowLongAgo = date.ToString();
 
                     Post mostRecentCommentedPost = await _context.Posts.FindAsync(mostRecentComment.PostId);
 
@@ -129,7 +132,10 @@ public class ForumController : Controller
                 else
                 {
                     mostRecentComment.ApplicationUser = await _context.ApplicationUsers.FindAsync(mostRecentComment.ApplicationUserId);
-                    // like in the other action, work out howlongago.
+                    
+                    DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                    DateTime date = start.AddMilliseconds(mostRecentComment.CreatedTS * 1000).ToLocalTime();
+                    mostRecentComment.HowLongAgo = date.ToString();
                     
                     int totalCommentsInPost = await _context.Comments.Where(c => c.PostId == post.Id && c.IsActive).CountAsync();
 
@@ -183,7 +189,10 @@ public class ForumController : Controller
             foreach (Comment comment in comments)
             {
                 comment.ApplicationUser = await _context.ApplicationUsers.FindAsync(comment.ApplicationUserId);
-                // work out howlongago.
+                
+                DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                DateTime date = start.AddMilliseconds(comment.CreatedTS * 1000).ToLocalTime();
+                comment.HowLongAgo = date.ToString();
             }
 
             post.Comments = comments;

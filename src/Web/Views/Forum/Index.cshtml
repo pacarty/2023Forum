@@ -49,7 +49,7 @@ This is the default landing page, as specified in MapControllerRoute in Program.
             @foreach (var topic in category.Topics)
             {
                 <div class="row topicRow">
-                    <div class="col-5 topicTitleArea"><a class="navLinks" asp-controller="Forum" asp-action="Topic" asp-route-id="@topic.Id">@topic.Name</a>&nbsp;&nbsp;
+                    <div class="col-4 topicTitleArea"><a class="navLinks" asp-controller="Forum" asp-action="Topic" asp-route-id="@topic.Id">@topic.Name</a>&nbsp;&nbsp;
                     @* Checking policy, only Root/Admin users with mod controls turned on should be able to see Remove Topic *@
                     @if ((await authorizationService.AuthorizeAsync(User, "EditDeleteCategoryTopic")).Succeeded)
                     {
@@ -67,16 +67,15 @@ This is the default landing page, as specified in MapControllerRoute in Program.
                             <a class="navLinks" asp-controller="Forum" asp-action="Post" asp-route-id="@topic.MostRecentCommentedPost.Id">@topic.MostRecentCommentedPost.Title</a>
                         </div>
                         <div class="col-1"></div>
-                        <div class="col-2">
+                        <div class="col-3">
                             <div class="row topicLastComment">
                                 @*
                                 This links to the Post page whose id = the id of the recent post. We want to jump to the position of the most recent comment, so we get the Posts LastPage property, which is an int that will take us to the last page.
                                 The fragment part starts with com_ and appends an id to it. Getting the Id: First we get the Posts MostRecentComment property, which is a Comment type. We then take that Comments Id property. This id gets appended to com_ to make something like com_3.
                                 In Post.cshtml, each comment's div has the id com_x where x = the id of that comment. With fragment, it means when this link is clicked, it appends #com_x to the url, which means it jumps straight to (positions the top of the page at) that html element.
-                                TODO: Instead of CreatedTS We will show the MostRecentComment's HowLongAgo property, which signifys time since CreatedTS.
                                 Note: We do not need to check if MostRecentCommentedPost.MostRecentComment is null because in the controller, MostRecentCommentedPost will also be null if there are no comments in the topic.
                                 *@
-                                <a class="postRightSideLinks" asp-controller="Forum" asp-action="Post" asp-route-id="@topic.MostRecentCommentedPost.Id" asp-route-page="@topic.MostRecentCommentedPost.LastPage" asp-fragment="com_@topic.MostRecentCommentedPost.MostRecentComment.Id">@topic.MostRecentCommentedPost.MostRecentComment.CreatedTS</a>
+                                <a class="postRightSideLinks" asp-controller="Forum" asp-action="Post" asp-route-id="@topic.MostRecentCommentedPost.Id" asp-route-page="@topic.MostRecentCommentedPost.LastPage" asp-fragment="com_@topic.MostRecentCommentedPost.MostRecentComment.Id">@topic.MostRecentCommentedPost.MostRecentComment.HowLongAgo</a>
                             </div>
                             <div class="row topicLastComment">
                                 @*
@@ -90,7 +89,7 @@ This is the default landing page, as specified in MapControllerRoute in Program.
                     else
                     {
                         <div class="col-4 postTitleArea">No posts in topic</div>
-                        <div class="col-3"></div>
+                        <div class="col-4"></div>
                     }
                     
                 </div>
