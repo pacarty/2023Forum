@@ -5,11 +5,13 @@
 @model ApplicationUser
 
 @{
+    @* Defining variables here so we get the correct type and also don't have to type ViewBag to access them every time. *@
     List<string> editRoles = ViewBag.editRoles;
     List<Category> categories = ViewBag.categories;
     List<ModeratorLink> selectedModeratedCategories = ViewBag.selectedModeratedCategories;
     List<BannedLink> selectedBannedCategories = ViewBag.selectedBannedCategories;
     
+    // Only display radio options if user we are editing is moderator.
     string moderatorDisplay = "none";
 
     if (Model.Role == "Moderator")
@@ -34,6 +36,7 @@
     <p><strong>Username: </strong>@Model.Username</p>
 </div>
 
+@* Only Root/Admin users can edit roles *@
 @if ((await authorizationService.AuthorizeAsync(User, @Model.Id, "EditUserRole")).Succeeded)
 {
     <form asp-controller="Admin" asp-action="EditUserRole" method="post" id="editUserRoleForm">

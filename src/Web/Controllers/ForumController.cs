@@ -217,6 +217,7 @@ public class ForumController : Controller
     public async Task<IActionResult> AddCategory()
     {
         // database, get number of categories, in this example we just pass the number 3
+        // TODO: In the future, we want the number of categories because we want to implement the ability to order the categories. That number 3 example will be used to work out the order number of the new category.
 
         return View(3);
     }

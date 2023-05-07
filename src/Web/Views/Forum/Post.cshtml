@@ -5,9 +5,6 @@
 @model Post
 
 @{
-    // Claim? test = User.Claims.Where(c => c.Type == "UserId").FirstOrDefault();
-    // to get string result, add .Value after FirstOrDefault()
-
     if (@Model != null)
     {
         ViewData["Title"] = @Model.Title;
@@ -22,6 +19,7 @@
 
 @if (@Model != null)
 {
+    @* Defining pagination variables here so we get the correct type and also don't have to type ViewBag to access them every time. *@
     int totalItems = ViewBag.totalItems;
     int itemsPerPage = ViewBag.itemsPerPage;
     int currentPage = ViewBag.currentPage;
@@ -139,22 +137,29 @@
             @*Previous*@
             @if (previous < 1)
             {
-                // do nothing
+                // If previous page is less than 1, then it doesn't exist, so don't display link.
+                // This also ensures that it doesn't display if there is only 1 page (pagination bar isn't shown).
             }
             else if (previous == 1)
             {
+                // If previous is 1, it is the default (first) page for that post, so display link to post page without page variable.
                 <a asp-controller="Forum" asp-action="Post" asp-route-id="@Model.Id">&laquo;</a>
             }
             else
             {
+                // Otherwise, display the previous icon, which links to the post with the current id and page = previous.
                 <a asp-controller="Forum" asp-action="Post" asp-route-id="@Model.Id" asp-route-page="@previous">&laquo;</a>
             }
 
             @*Pages*@
+            @* Only display links if there is more than 1 page *@
             @if (totalPages > 1)
             {
+                // when an anchor tags class=active, its number is highlighted so signify that we are on that page.
+                // declare variable here so it has scope in this whole if block.
                 string activeClass = "";
 
+                // If we are on the default (first) page, set the activeClass string to active.
                 if (currentPage == 1)
                 {
                     activeClass = "active";
@@ -164,10 +169,13 @@
                     activeClass = "";
                 }
 
+                // For the default (first) page, display link to post page without page variable.
                 <a class=@activeClass asp-controller="Forum" asp-action="Post" asp-route-id="@Model.Id">1</a>
 
+                // For the rest of the pages (we've already done page 1, so we start with index = 2), loop through and display the links, with the difference here being we now add asp-route-page, because the page will not be the default page 1.
                 @for (int i = 2; i <= totalPages; i++)
                 {
+                    // If the index is the current page, set the activeClass string to active.
                     if (currentPage == i)
                     {
                         activeClass = "active";
@@ -177,6 +185,7 @@
                         activeClass = "";
                     }
 
+                    // asp-route-page links to what the current index is.
                     <a class=@activeClass asp-controller="Forum" asp-action="Post" asp-route-id="@Model.Id" asp-route-page="@i">@i</a>
                 }
             }
@@ -184,9 +193,10 @@
             @*Next*@
             @if (next > totalPages)
             {
-                // do nothing
+                // If next page is greater than totalPages, then it doesn't exist, so don't display link.
             } else
             {
+                // Otherwise, display the next icon, which links to the post with the current id and page = next.
                 <a asp-controller="Forum" asp-action="Post" asp-route-id="@Model.Id" asp-route-page="@next">&raquo;</a>
             }
         </div>
