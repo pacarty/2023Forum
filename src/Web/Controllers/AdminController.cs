@@ -53,6 +53,7 @@ public class AdminController : Controller
 
         int pageIndex = page - 1 ?? 0;
         int totalItems = 0;
+        int itemsPerPage = 2;
 
         Claim? currentUserIdClaim = User.Claims.Where(c => c.Type == "UserId").FirstOrDefault();
 
@@ -73,8 +74,8 @@ public class AdminController : Controller
         if (currentUser.Role == "Root")
         {
             users = await _context.ApplicationUsers
-            .Skip(2 * pageIndex)
-            .Take(2)
+            .Skip(itemsPerPage * pageIndex)
+            .Take(itemsPerPage)
             .ToListAsync();
 
             totalItems = await _context.ApplicationUsers.CountAsync();
@@ -82,8 +83,8 @@ public class AdminController : Controller
         else if (currentUser.Role == "Admin")
         {
             users = await _context.ApplicationUsers.Where(u => u.Role != "Root" && u.Role != "Admin")
-            .Skip(2 * pageIndex)
-            .Take(2)
+            .Skip(itemsPerPage * pageIndex)
+            .Take(itemsPerPage)
             .ToListAsync();
 
             totalItems = await _context.ApplicationUsers.Where(u => u.Role != "Root" && u.Role != "Admin").CountAsync();
@@ -91,17 +92,17 @@ public class AdminController : Controller
         else if (currentUser.Role == "Moderator")
         {
             users = await _context.ApplicationUsers.Where(u => u.Role != "Root" && u.Role != "Admin" && u.Role != "Moderator")
-            .Skip(2 * pageIndex)
-            .Take(2)
+            .Skip(itemsPerPage * pageIndex)
+            .Take(itemsPerPage)
             .ToListAsync();
 
             totalItems = await _context.ApplicationUsers.Where(u => u.Role != "Root" && u.Role != "Admin" && u.Role != "Moderator").CountAsync();
         }
 
         ViewBag.totalItems = totalItems;
-        ViewBag.itemsPerPage = 2;
+        ViewBag.itemsPerPage = itemsPerPage;
         ViewBag.currentPage = pageIndex + 1;
-        ViewBag.totalPages = int.Parse(Math.Ceiling(((decimal)totalItems / 2)).ToString());
+        ViewBag.totalPages = int.Parse(Math.Ceiling(((decimal)totalItems / itemsPerPage)).ToString());
         ViewBag.previous = pageIndex;
         ViewBag.next = pageIndex + 2;
 

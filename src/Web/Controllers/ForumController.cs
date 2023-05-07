@@ -108,11 +108,12 @@ public class ForumController : Controller
         }
 
         int pageIndex = page - 1 ?? 0;
+        int itemsPerPage = 2;
 
         List<Post> posts = await _context.Posts.Where(p => p.TopicId == id && p.IsActive)
         .OrderByDescending(p => p.MostRecentCommentTS)
-        .Skip(2 * pageIndex)
-        .Take(2)
+        .Skip(itemsPerPage * pageIndex)
+        .Take(itemsPerPage)
         .ToListAsync();
 
         if (posts == null)
@@ -150,9 +151,9 @@ public class ForumController : Controller
         int totalItems = await _context.Posts.Where(p => p.TopicId == id && p.IsActive).CountAsync();
 
         ViewBag.totalItems = totalItems;
-        ViewBag.itemsPerPage = 2;
+        ViewBag.itemsPerPage = itemsPerPage;
         ViewBag.currentPage = pageIndex + 1;
-        ViewBag.totalPages = int.Parse(Math.Ceiling(((decimal)totalItems / 2)).ToString());
+        ViewBag.totalPages = int.Parse(Math.Ceiling(((decimal)totalItems / itemsPerPage)).ToString());
         ViewBag.previous = pageIndex;
         ViewBag.next = pageIndex + 2;
 
@@ -173,11 +174,12 @@ public class ForumController : Controller
         post.Topic = await _context.Topics.FindAsync(post.TopicId);
 
         int pageIndex = page - 1 ?? 0;
+        int itemsPerPage = 2;
 
         List<Comment> comments = await _context.Comments.Where(c => c.PostId == id && c.IsActive)
         .OrderBy(c => c.CreatedTS)
-        .Skip(2 * pageIndex)
-        .Take(2)
+        .Skip(itemsPerPage * pageIndex)
+        .Take(itemsPerPage)
         .ToListAsync();
 
         if (comments == null)
@@ -201,9 +203,9 @@ public class ForumController : Controller
         int totalItems = await _context.Comments.Where(c => c.PostId == id && c.IsActive).CountAsync();
 
         ViewBag.totalItems = totalItems;
-        ViewBag.itemsPerPage = 2;
+        ViewBag.itemsPerPage = itemsPerPage;
         ViewBag.currentPage = pageIndex + 1;
-        ViewBag.totalPages = int.Parse(Math.Ceiling(((decimal)totalItems / 2)).ToString());
+        ViewBag.totalPages = int.Parse(Math.Ceiling(((decimal)totalItems / itemsPerPage)).ToString());
         ViewBag.previous = pageIndex;
         ViewBag.next = pageIndex + 2;
 
