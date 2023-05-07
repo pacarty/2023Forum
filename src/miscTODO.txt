@@ -1,4 +1,3 @@
 - Comment everything (reduce size of comments in some areas if its too verbose).
-- Change timestamp on posts/comments to "HowLongAgo" / Date
 - Search function. Start with ability to search users in user management section. Then, ability to search posts/comments all throughout the forum.
 - Ability to change order of Categories and Topics.
