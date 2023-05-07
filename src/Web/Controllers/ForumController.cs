@@ -202,7 +202,7 @@ public class ForumController : Controller
     }
 
     [HttpGet]
-    [Authorize(Policy = "IsRootOrAdmin")]
+    [Authorize(Policy = "EditDeleteCategoryTopic")]
     public async Task<IActionResult> AddCategory()
     {
         // database, get number of categories, in this example we just pass the number 3
@@ -211,7 +211,7 @@ public class ForumController : Controller
     }
 
     [HttpPost]
-    [Authorize(Policy = "IsRootOrAdmin")]
+    [Authorize(Policy = "EditDeleteCategoryTopic")]
     public async Task<IActionResult> AddCategory(string categoryName)
     {
         DateTime currentTime = DateTime.UtcNow;
@@ -231,7 +231,7 @@ public class ForumController : Controller
     }
 
     [HttpGet]
-    [Authorize(Policy = "IsRootOrAdmin")]
+    [Authorize(Policy = "EditDeleteCategoryTopic")]
     public async Task<IActionResult> AddTopic(int id)
     {
         Category category = await _context.Categories.FindAsync(id);
@@ -241,7 +241,7 @@ public class ForumController : Controller
     }
 
     [HttpPost]
-    [Authorize(Policy = "IsRootOrAdmin")]
+    [Authorize(Policy = "EditDeleteCategoryTopic")]
     public async Task<IActionResult> AddTopic(int categoryId, string topicName)
     {
         DateTime currentTime = DateTime.UtcNow;
@@ -513,7 +513,7 @@ public class ForumController : Controller
     }
 
     [HttpPost]
-    [Authorize(Policy = "IsRootOrAdmin")]
+    [Authorize(Policy = "EditDeleteCategoryTopic")]
     public async Task<IActionResult> DeleteTopic(int deleteTopicId)
     {
         Topic topic = await _context.Topics.FindAsync(deleteTopicId);
@@ -525,7 +525,7 @@ public class ForumController : Controller
     }
 
     [HttpPost]
-    [Authorize(Policy = "IsRootOrAdmin")]
+    [Authorize(Policy = "EditDeleteCategoryTopic")]
     public async Task<IActionResult> DeleteCategory(int deleteCategoryId)
     {
         Category category = await _context.Categories.FindAsync(deleteCategoryId);

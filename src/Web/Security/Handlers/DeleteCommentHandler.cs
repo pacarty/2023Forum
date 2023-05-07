@@ -15,7 +15,7 @@ public class DeleteCommentHandler : AuthorizationHandler<DeleteCommentRequiremen
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, DeleteCommentRequirement requirement, int commentId)
     {
-        if (await _authService.CanDeleteComment(context.User, commentId) || await _authService.CanModerateComment(context.User, commentId))
+        if (await _authService.CanDeleteComment(context.User, commentId))
         {
             context.Succeed(requirement);
         }

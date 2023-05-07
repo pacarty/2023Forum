@@ -54,16 +54,23 @@ public class AdminController : Controller
         int pageIndex = page - 1 ?? 0;
         int totalItems = 0;
 
-        Claim? currentUserRoleClaim = User.Claims.Where(c => c.Type == "Role").FirstOrDefault();
+        Claim? currentUserIdClaim = User.Claims.Where(c => c.Type == "UserId").FirstOrDefault();
 
-        if (currentUserRoleClaim == null)
+        if (currentUserIdClaim == null)
         {
             return new ForbidResult();
         }
 
-        string currentUserRole = currentUserRoleClaim.Value;
+        int currentUserId = Int32.Parse(currentUserIdClaim.Value);
 
-        if (currentUserRole == "Root")
+        ApplicationUser currentUser = await _context.ApplicationUsers.Where(u => u.Id == currentUserId && u.Role != "User" && u.Role != "Banned").FirstOrDefaultAsync();
+
+        if (currentUser == null)
+        {
+            return new ForbidResult();
+        }
+
+        if (currentUser.Role == "Root")
         {
             users = await _context.ApplicationUsers
             .Skip(2 * pageIndex)
@@ -72,7 +79,7 @@ public class AdminController : Controller
 
             totalItems = await _context.ApplicationUsers.CountAsync();
         }
-        else if (currentUserRole == "Admin")
+        else if (currentUser.Role == "Admin")
         {
             users = await _context.ApplicationUsers.Where(u => u.Role != "Root" && u.Role != "Admin")
             .Skip(2 * pageIndex)
@@ -81,7 +88,7 @@ public class AdminController : Controller
 
             totalItems = await _context.ApplicationUsers.Where(u => u.Role != "Root" && u.Role != "Admin").CountAsync();
         }
-        else if (currentUserRole == "Moderator")
+        else if (currentUser.Role == "Moderator")
         {
             users = await _context.ApplicationUsers.Where(u => u.Role != "Root" && u.Role != "Admin" && u.Role != "Moderator")
             .Skip(2 * pageIndex)
@@ -113,28 +120,47 @@ public class AdminController : Controller
 
         ApplicationUser userToEdit = await _context.ApplicationUsers.FindAsync(id);
 
-        Claim? currentUserRoleClaim = User.Claims.Where(c => c.Type == "Role").FirstOrDefault();
+        Claim? currentUserIdClaim = User.Claims.Where(c => c.Type == "UserId").FirstOrDefault();
 
-        if (currentUserRoleClaim == null)
+        if (currentUserIdClaim == null)
         {
             return new ForbidResult();
         }
 
-        string currentUserRole = currentUserRoleClaim.Value;
+        int currentUserId = Int32.Parse(currentUserIdClaim.Value);
+        // TODO: can change this (and others) to FindAsync, because we know the user has the correct role from IsHigherAuthority authorization check earlier
+        ApplicationUser currentUser = await _context.ApplicationUsers.Where(u => u.Id == currentUserId && u.Role != "User" && u.Role != "Banned").FirstOrDefaultAsync();
+
+        if (currentUser == null)
+        {
+            return new ForbidResult();
+        }
 
         List<string> roles;
+        List<Category> categories;
 
-        if (currentUserRole == "Root")
+        if (currentUser.Role == "Root")
         {
             roles = new List<string> { "Root", "Admin", "Moderator", "User", "Banned" };
+            categories = await _context.Categories.Where(c => c.IsActive).ToListAsync();
         }
-        else if (currentUserRole == "Admin")
+        else if (currentUser.Role == "Admin")
         {
             roles = new List<string> { "Moderator", "User", "Banned" };
+            categories = await _context.Categories.Where(c => c.IsActive).ToListAsync();
         }
-        else if (currentUserRole == "Moderator")
+        else if (currentUser.Role == "Moderator")
         {
             roles = new List<string>();
+
+            // Moderators can only ban from categories they moderate in.
+            var query = from c in _context.Categories
+                        join m in _context.ModeratorLinks
+                        on c.Id equals m.CategoryId
+                        where m.ApplicationUserId == currentUser.Id && c.IsActive
+                        select c;
+
+            categories = await query.ToListAsync();
         }
         else
         {
@@ -142,7 +168,7 @@ public class AdminController : Controller
         }
 
         ViewBag.editRoles = roles;
-        ViewBag.categories = await _context.Categories.Where(c => c.IsActive).ToListAsync();
+        ViewBag.categories = categories;
         ViewBag.selectedModeratedCategories = await _context.ModeratorLinks.Where(m => m.ApplicationUserId == userToEdit.Id).ToListAsync();
         ViewBag.selectedBannedCategories = await _context.BannedLinks.Where(m => m.ApplicationUserId == userToEdit.Id).ToListAsync();
 
@@ -152,13 +178,9 @@ public class AdminController : Controller
     [HttpPost]
     public async Task<IActionResult> EditUserRole(int userId, string role, string[] moderation_categories)
     {
-        // TODO: RootOrAdmin takes into account ShowModControls in policy in program.cs
-        // Maybe change IsHigherAuthority so that it must be only root or admin. Then remove IsRootOrAdmin result.
-        // Also, it doesn't look too good having more than one authorizationResult.
-        var authorizationResult = await _authorizationService.AuthorizeAsync(User, userId, "IsRootOrAdmin");
-        var authorizationResult2 = await _authorizationService.AuthorizeAsync(User, userId, "IsHigherAuthority");
+        var authorizationResult = await _authorizationService.AuthorizeAsync(User, userId, "EditUserRole");
 
-        if (!authorizationResult.Succeeded || !authorizationResult2.Succeeded)
+        if (!authorizationResult.Succeeded)
         {
             return new ForbidResult();
         }
@@ -231,7 +253,27 @@ public class AdminController : Controller
             return new ForbidResult();
         }
 
-        foreach (Category category in await _context.Categories.Where(c => c.IsActive).ToListAsync())
+        Claim? currentUserIdClaim = User.Claims.Where(c => c.Type == "UserId").FirstOrDefault();
+        ApplicationUser currentUser = await _context.ApplicationUsers.FindAsync(Int32.Parse(currentUserIdClaim.Value));
+
+        List<Category> categories;
+        // Moderators can only ban from categories they moderate in.
+        if (currentUser.Role == "Moderator")
+        {
+            var query = from c in _context.Categories
+                        join m in _context.ModeratorLinks
+                        on c.Id equals m.CategoryId
+                        where m.ApplicationUserId == currentUser.Id && c.IsActive
+                        select c;
+
+            categories = await query.ToListAsync();
+        }
+        else
+        {   // the only other users that would reach this point (because of IsHigherAuthority check) are Root/Admin users. They can edit all categories.
+            categories = await _context.Categories.Where(c => c.IsActive).ToListAsync();
+        }
+
+        foreach (Category category in categories)
         {
             BannedLink bannedLink = await _context.BannedLinks.Where(m => m.ApplicationUserId == userId && m.CategoryId == category.Id).FirstOrDefaultAsync();
 
@@ -314,12 +356,12 @@ public class AdminController : Controller
         await _context.SaveChangesAsync();
 
         // Refreshing User so they don't have to log out and log back in to use mod controls
+        // Currently we are not utilising the ShowModControls claim (everywhere in the system that we need ShowModControls we get it from the database). However, it could potentially be used in the future and it is harmless because it is a claim that only the user can change themselves (unlike Role, which can turn into a problem when a higher user changes the role of a lower user and the changes aren't reflected in that users current claim).
 
         var claims = new List<Claim>
         {
             new Claim("UserId", currentUser.Id.ToString()),
             new Claim("Username", currentUser.Username),
-            new Claim("Role", currentUser.Role),
             new Claim("ShowModControls", currentUser.ShowModControls.ToString())
         };
 

@@ -1,3 +1,5 @@
-- After comment/post had been submitted, redirect to same page.
+- Navigation: After comment/post had been submitted, redirect to same page. Do this all throughout the application.
 - Validation for login page.
 - Register and login password fields should be password type.
+- Comment everything (reduce size of comments in some areas if its too verbose).
+- Change timestamp on posts/comments to "HowLongAgo" / Date

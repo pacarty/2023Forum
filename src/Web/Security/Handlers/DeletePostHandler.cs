@@ -15,7 +15,7 @@ public class DeletePostHandler : AuthorizationHandler<DeletePostRequirement, int
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, DeletePostRequirement requirement, int postId)
     {
-        if (await _authService.CanModeratePost(context.User, postId))
+        if (await _authService.CanDeletePost(context.User, postId))
         {
             context.Succeed(requirement);
         }

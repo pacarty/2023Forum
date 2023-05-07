@@ -14,7 +14,7 @@ This is the default landing page, as specified in MapControllerRoute in Program.
 
 <br>
 @* Checking policy, only Root/Admin users with mod controls turned on should be able to see Add Category *@
-@if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
+@if ((await authorizationService.AuthorizeAsync(User, "EditDeleteCategoryTopic")).Succeeded)
 {
     <div class="row">
         <p><a class="addBtn" asp-controller="Forum" asp-action="AddCategory">Add Category</a></p>
@@ -29,14 +29,14 @@ This is the default landing page, as specified in MapControllerRoute in Program.
         <div class="row categoryHeader">
             <div class="col-6 categoryTitle">@category.Name &nbsp;&nbsp;
                 @* Checking policy, only Root/Admin users with mod controls turned on should be able to see Remove Category *@
-                @if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
+                @if ((await authorizationService.AuthorizeAsync(User, "EditDeleteCategoryTopic")).Succeeded)
                 {
-                    @* There is an if block at the bottom of this page, requiring the IsRootOrAdmin policy to be satisfied. If it is, then the html for the modal is rendered, and so is the scripts section which references the indexAdmin.js file which contains the openDeleteCategoryModal() function. *@
+                    @* There is an if block at the bottom of this page, requiring the EditDeleteCategoryTopic policy to be satisfied. If it is, then the html for the modal is rendered, and so is the scripts section which references the indexAdmin.js file which contains the openDeleteCategoryModal() function. *@
                     <a href="javascript:openDeleteCategoryModal(@category.Id, '@category.Name')" class="removeBtn">Remove</a>
                 }
             </div>
             @* Only Root/Admin users can Add Topic *@
-            @if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
+            @if ((await authorizationService.AuthorizeAsync(User, "EditDeleteCategoryTopic")).Succeeded)
             {
                 <div class="col-6 addTopicArea">
                     <a class="addBtn" asp-controller="Forum" asp-action="AddTopic" asp-route-id="@category.Id">Add Topic</a>
@@ -51,7 +51,7 @@ This is the default landing page, as specified in MapControllerRoute in Program.
                 <div class="row topicRow">
                     <div class="col-5 topicTitleArea"><a class="navLinks" asp-controller="Forum" asp-action="Topic" asp-route-id="@topic.Id">@topic.Name</a>&nbsp;&nbsp;
                     @* Checking policy, only Root/Admin users with mod controls turned on should be able to see Remove Topic *@
-                    @if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
+                    @if ((await authorizationService.AuthorizeAsync(User, "EditDeleteCategoryTopic")).Succeeded)
                     {
                         @* This works the same as the delete category modal, the html for delete topic modal is in the same if block at the bottom of this page, and the js is in the referenced indexAdmin.js file. *@
                         <a href="javascript:openDeleteTopicModal(@topic.Id, '@topic.Name')" class="removeBtn">Remove</a>
@@ -114,10 +114,10 @@ else
 
 @*
 The confirm delete category and topic modals referenced earlier are implemented here at the bottom of the page.
-IsRootOrAdmin policy must be satisfied for the html code to be written on the page.
+EditDeleteCategoryTopic policy must be satisfied for the html code to be written on the page.
 When remove category or remove topic is selected, the js function (either openDeleteCategoryModal() or openDeleteTopicModal()) is called, and the appropriate modal has its display set to block. As per app.css their display is set to none by default.
 *@
-@if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
+@if ((await authorizationService.AuthorizeAsync(User, "EditDeleteCategoryTopic")).Succeeded)
 {
     <div id="confirmDeleteCategoryModal" class="modal">
         <div class="modal-content">

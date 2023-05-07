@@ -72,33 +72,37 @@
                             </div>
                         }
                     </div>
-
-                    @if ((await authorizationService.AuthorizeAsync(User, comment.Id, "DeleteComment")).Succeeded)
+                    @* TODO: Make this nicer with regards to AuthorizeAsync. Try to make it so there are fewer 'if' checks. *@
+                    @if ((await authorizationService.AuthorizeAsync(User, comment.Id, "EditComment")).Succeeded || (await authorizationService.AuthorizeAsync(User, comment.Id, "DeleteComment")).Succeeded)
                     {
                         <br>
                         <div class="row">
                             <div class="col-12 nav" id="editDeleteDIV_@comment.Id">
-
-                            @if ((await authorizationService.AuthorizeAsync(User, comment.Id, "EditComment")).Succeeded)
+                                @if ((await authorizationService.AuthorizeAsync(User, comment.Id, "EditComment")).Succeeded)
+                                {
+                                    <a class="editLinks" href="javascript:editComment('@comment.Id')">Edit</a>
+                                }
+                                
+                                @if ((await authorizationService.AuthorizeAsync(User, comment.Id, "DeleteComment")).Succeeded)
+                                {
+                                    <a class="editLinks" href="javascript:deleteComment('@comment.Id')">Delete</a>
+                                }
+                            
+                            </div>
+                            @if ((await authorizationService.AuthorizeAsync(User, comment.Id, "DeleteComment")).Succeeded)
                             {
-                                <a class="editLinks" href="javascript:editComment('@comment.Id')">Edit</a>
-                            }
-                            
-                            &nbsp;<a class="editLinks" href="javascript:deleteComment('@comment.Id')">Delete</a>
-                            
-                            </div>
-                            <div class="col-12 nav" id="confirmDeleteDIV_@comment.Id" style="display:none">
-                                <span style="font-size:14px;">Confirm Delete&#63;</span>&nbsp;&nbsp;
-                                <form asp-controller="Forum" asp-action="DeleteComment" id="deleteCommentForm_@comment.Id" method="post">
-                                    <input type="hidden" id="deleteCommentId" name="deleteCommentId" value="@comment.Id"  />
-                                    <input type="hidden" id="currentPage" name="currentPage" value="@currentPage" />
-                                    <a class="editLinks" href="javascript:submitDeleteComment(@comment.Id)">Yes</a>
-                                </form>
-                                &nbsp;/ <a class="editLinks" href="javascript:cancelDeleteComment('@comment.Id')">No</a>
-                            </div>
+                                <div class="col-12 nav" id="confirmDeleteDIV_@comment.Id" style="display:none">
+                                    <span style="font-size:14px;">Confirm Delete&#63;</span>&nbsp;&nbsp;
+                                    <form asp-controller="Forum" asp-action="DeleteComment" id="deleteCommentForm_@comment.Id" method="post">
+                                        <input type="hidden" id="deleteCommentId" name="deleteCommentId" value="@comment.Id"  />
+                                        <input type="hidden" id="currentPage" name="currentPage" value="@currentPage" />
+                                        <a class="editLinks" href="javascript:submitDeleteComment(@comment.Id)">Yes</a>
+                                    </form>
+                                    &nbsp;/ <a class="editLinks" href="javascript:cancelDeleteComment('@comment.Id')">No</a>
+                                </div>
+                            } 
                         </div>
                     }
-                    
                 </div>
                 <div class="col-1"></div>
                 <div class="col-2 commentTime">@comment.CreatedTS</div>

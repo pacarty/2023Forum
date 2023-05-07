@@ -85,7 +85,6 @@ public class AccountController : Controller
         {
             new Claim("UserId", user.Id.ToString()),
             new Claim("Username", user.Username),
-            new Claim("Role", user.Role),
             new Claim("ShowModControls", user.ShowModControls.ToString())
         };
 

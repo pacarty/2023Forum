@@ -19,7 +19,5 @@ public class EditCommentHandler : AuthorizationHandler<EditCommentRequirement, i
         {
             context.Succeed(requirement);
         }
-
-        //return Task.CompletedTask;
     }
 }

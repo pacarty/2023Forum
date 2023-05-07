@@ -34,7 +34,7 @@
     <p><strong>Username: </strong>@Model.Username</p>
 </div>
 
-@if ((await authorizationService.AuthorizeAsync(User, "IsRootOrAdmin")).Succeeded)
+@if ((await authorizationService.AuthorizeAsync(User, @Model.Id, "EditUserRole")).Succeeded)
 {
     <form asp-controller="Admin" asp-action="EditUserRole" method="post" id="editUserRoleForm">
         <input type="hidden" id="userId" name="userId" value="@Model.Id" />

@@ -23,12 +23,8 @@ builder.Services.AddAuthentication("WhirlAuth")
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("IsRootOrAdmin", policy =>
-                                policy.RequireClaim("Role", "Root", "Admin")
-                                      .RequireClaim("ShowModControls", "True"));
-
-    options.AddPolicy("IsManager", policy =>
-                                policy.RequireClaim("Role", "Root", "Admin", "Moderator"));
+    options.AddPolicy("IsManager",
+        policy => policy.AddRequirements(new IsManagerRequirement()));
 
     options.AddPolicy("IsValidUser",
         policy => policy.AddRequirements(new IsValidUserRequirement()));
@@ -45,13 +41,22 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("DeletePost",
         policy => policy.AddRequirements(new DeletePostRequirement()));
 
+    options.AddPolicy("EditDeleteCategoryTopic",
+        policy => policy.AddRequirements(new EditDeleteCategoryTopicRequirement()));
+
+    options.AddPolicy("EditUserRole",
+        policy => policy.AddRequirements(new EditUserRoleRequirement()));
+
 });
 
+builder.Services.AddTransient<IAuthorizationHandler, IsManagerHandler>();
 builder.Services.AddTransient<IAuthorizationHandler, IsValidUserHandler>();
 builder.Services.AddTransient<IAuthorizationHandler, IsHigherAuthorityHandler>();
 builder.Services.AddTransient<IAuthorizationHandler, EditCommentHandler>();
 builder.Services.AddTransient<IAuthorizationHandler, DeleteCommentHandler>();
 builder.Services.AddTransient<IAuthorizationHandler, DeletePostHandler>();
+builder.Services.AddTransient<IAuthorizationHandler, EditDeleteCategoryTopicHandler>();
+builder.Services.AddTransient<IAuthorizationHandler, EditUserRoleHandler>();
 
 var app = builder.Build();
 
