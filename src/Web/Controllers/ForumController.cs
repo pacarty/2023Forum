@@ -340,11 +340,11 @@ public class ForumController : Controller
         
         await _context.SaveChangesAsync();
 
-        return RedirectToAction("Index", "Forum");
+        return RedirectToAction("Topic", "Forum", new { id = topicId });
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddComment(int postId, string content)
+    public async Task<IActionResult> AddComment(int postId, string content, int currentPage)
     {
         Post post = await _context.Posts.Where(p => p.Id == postId && p.IsActive).FirstOrDefaultAsync();
 
@@ -394,7 +394,7 @@ public class ForumController : Controller
         
         await _context.SaveChangesAsync();
 
-        return RedirectToAction("Index", "Forum");
+        return RedirectToAction("Post", "Forum", new { id = postId, page = currentPage });
     }
 
     [HttpPost]
