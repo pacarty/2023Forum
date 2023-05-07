@@ -1,38 +1,31 @@
-@*
-The layout page is the html that is rendered on every page. Each page contains this exact html, with the @Render tags signifying html that is displayed dynamically depending on the view we are rendering. The @ViewData[Title] variable also changes depending on the view.
-*@
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title> @* Title of page depends on what the ViewData[Title] variable is set to in the view *@
-    @* For css, we reference the bootstrap grid library that we have stored in lib. app.css is custom css. We append a new random string each time the project is built, so that old css with the same file name isn't taken from the cache. *@
+    <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="~/lib/bootstrap/bootstrap-grid.min.css" />
-    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" /> @* Custom CSS *@
 </head>
 <body>
     <div class="container">
         <div class="row">
             <div class="col-5">
                 <p>
-                    @* A section titled ForumNavigation can be specified in a view. When that view is rendered, the html inside that section is added in place of this @RenderSection tag. We use it as a way to expand the navigation menu the deeper the user has gone into the forum. False = only required in views that we need it. *@
+                    @* The Forum Navigation section is appended to the home Forum link on pages where it is required *@
                     <a class="navLinks" asp-controller="Forum" asp-action="Index">Forum</a>
                     @RenderSection("ForumNavigation", false)
                 </p>
             </div>
             <div class="col-7 nav">
-                @* This partial simply means the html inside _LoginPartial.cshtml will be rendered here. *@
+                @* This partial contains the User navigation menu (Register/Login/Logout, Settings, Admin) *@
                 <partial name = "_LoginPartial" />
             </div>
         </div>
-        @* Whenever the user navigates to a page, the controller which controls the route to that page will render a view. This is a cshtml file which contains the html that will be displayed in place of this @RenderBody tag. *@
         @RenderBody()
     </div>
-    @* For javascript, we reference the jquery library which is stored in lib, and site.js is our custom javascript. Just like with the css we append a new random string to site.js on each build to avoid cache issues. *@
     <script src="~/lib/jquery/jquery-3.6.1.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @* This section is placed here because the bottom of the body is where we should include javascript. If we need some javascript code to be in a particular view (and that view only), we should put it inside a scripts section block within that view file. False = only required in views that we need it. *@
+    <script src="~/js/site.js" asp-append-version="true"></script> @* Custom JS *@
     @RenderSection("scripts", required: false)
 </body>
 </html>
