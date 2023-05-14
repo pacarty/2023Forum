@@ -18,6 +18,8 @@ public interface IAuthService
     Task<bool> IsManager(ClaimsPrincipal user);
 }
 
+// This class is used by the auth handlers, as there is a lot of repeat code across all the handlers.
+// The functions return a bool value to let the handler know if auth is successful or not
 public class AuthService : IAuthService
 {
     private readonly DataContext _context;
@@ -39,11 +41,13 @@ public class AuthService : IAuthService
         return comment.ApplicationUserId == currentUser.Id;
     }
 
+    // Only the user of the comment can edit it
     public async Task<bool> CanEditComment(ClaimsPrincipal user, int commentId)
     {
         return await IsUsersComment(user, await _context.Comments.FindAsync(commentId));
     }
 
+    // The user of the comment and anyone with a higher authority can delete a comment
     public async Task<bool> CanDeleteComment(ClaimsPrincipal user, int commentId)
     {
         Comment comment = await _context.Comments.FindAsync(commentId);
@@ -51,8 +55,10 @@ public class AuthService : IAuthService
 
         Post post = await _context.Posts.FindAsync(comment.PostId);
         if (post == null) return false;
+        // Cannot delete the first comment in a post. This is to avoid empty posts as well as the idea of the first comment in a post being like an extended title of sorts
         if (post.FirstCommentId == commentId) return false;
 
+        // If it is the users comment, no need to do any further checks
         if (await IsUsersComment(user, comment)) return true;
 
         ApplicationUser currentUser = await GetApplicationUserFromPrincipal(user);
@@ -61,6 +67,7 @@ public class AuthService : IAuthService
         ApplicationUser commentUser = await _context.ApplicationUsers.FindAsync(comment.ApplicationUserId);
         if (commentUser == null) return false;
 
+        // Check if higher authority as well as mod controls are turned on
         return await CanModerate(currentUser, commentUser) && currentUser.ShowModControls;
     }
 
@@ -81,6 +88,8 @@ public class AuthService : IAuthService
         return await CanModerate(currentUser, editPostUser);
     }
 
+    // Only Root/Admin users with mod controls on can add categories or topics
+
     public async Task<bool> CanEditCategoriesAndTopics(ClaimsPrincipal user)
     {
         ApplicationUser currentUser = await GetApplicationUserFromPrincipal(user);
@@ -95,6 +104,7 @@ public class AuthService : IAuthService
         }
     }
 
+    // To edit a user role, the user must be root or admin and have a higher authority than the user they are editing
     public async Task<bool> CanEditUserRole(ClaimsPrincipal user, int userId)
     {
         ApplicationUser currentUser = await GetApplicationUserFromPrincipal(user);
@@ -109,6 +119,8 @@ public class AuthService : IAuthService
         return await CanModerate(currentUser, editUser);
     }
 
+    // Higher authority means you are at least one tier higher than the user you are editing. Unless you are a root user in which case you can edit everything.
+    // Here, we are simply transforming the claims princips and userId into ApplicationUser objects so we can perform the CanModerate check with the correct parameters.
     public async Task<bool> IsHigherAuthority(ClaimsPrincipal user, int userId)
     {
         ApplicationUser currentUser = await GetApplicationUserFromPrincipal(user);
@@ -148,6 +160,7 @@ public class AuthService : IAuthService
         }
     }
 
+    // This simply takes the claims principal and turns it into an ApplicationUser object
     private async Task<ApplicationUser> GetApplicationUserFromPrincipal(ClaimsPrincipal user)
     {
         Claim currentUserIdClaim = user.Claims.Where(c => c.Type == "UserId").FirstOrDefault();
@@ -158,6 +171,7 @@ public class AuthService : IAuthService
         return await _context.ApplicationUsers.Where(u => u.Id == currentUserId).FirstOrDefaultAsync();
     }
 
+    // Users can only moderate if they are least one tier higher than the user they are editing. Unless they are a root user in which case they can edit everything
     private async Task<bool> CanModerate(ApplicationUser currentUser, ApplicationUser editUser)
     {
         if (currentUser.Role == "Root")

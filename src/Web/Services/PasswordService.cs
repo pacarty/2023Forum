@@ -1,5 +1,3 @@
-
-
 namespace Forum.Services;
 
 public interface IPasswordService
@@ -10,6 +8,8 @@ public interface IPasswordService
 
 public class PasswordService : IPasswordService
 {
+    // By using 'out' parameters, we assign the variables passed in by reference, so we don't use a return value
+    // Here we simply generate a random array of bytes for the password hash and salt
     public void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
     {
         using (var hmac = new System.Security.Cryptography.HMACSHA512())

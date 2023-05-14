@@ -29,6 +29,7 @@ function submitDeleteTopic() {
     document.getElementById("deleteTopicForm").submit();
 }
 
+// When a user clicks outside the modal window, it exits the modal
 window.onclick = function(event) {
     if (event.target == confirmDeleteCategoryModal) {
         confirmDeleteCategoryModal.style.display = 'none';

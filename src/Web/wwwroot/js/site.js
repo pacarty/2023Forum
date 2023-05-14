@@ -1,4 +1,4 @@
-
+// Registering a user
 function submitRegister() {
 	var userField = document.getElementById("registerUsername").value;
 	var passwordField = document.getElementById("registerPassword").value;
@@ -36,6 +36,7 @@ function submitRegister() {
 	});
 }
 
+// Authenticating user
 function submitLogin() {
 	var userField = document.getElementById("loginUsername").value;
 	var passwordField = document.getElementById("loginPassword").value;

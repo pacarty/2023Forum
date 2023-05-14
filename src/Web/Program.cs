@@ -68,13 +68,14 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Rather than having the default HomeController, the ForumController acts as the default route of the website
 app.MapControllerRoute("default", "{controller=Forum}/{action=Index}/{id?}");
 
 app.Run();

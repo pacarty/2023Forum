@@ -36,15 +36,19 @@ public class ForumController : Controller
         // if the database doesn't exist, create one
         await _context.Database.EnsureCreatedAsync();
 
-        // here we want to check if any user has been created. if not, we will set one up. The username and password should be the desired credentials of the user who sets up this forum. TODO: make it so that the username and password variables are stored somewhere like an env file or in appsettings.json.
+        // here we want to check if any user has been created. if not, we will set one up. The username and password should be the desired credentials of the user who sets up this forum ie. the Root user. TODO: make it so that the username and password variables are stored somewhere like an env file or in appsettings.json.
+
+        string rootUserUsername = "root";
+        string rootUserPassword = "pass";
+
         if (!await _context.ApplicationUsers.AnyAsync())
         {
             byte[] passwordHash, passwordSalt;
-            _passwordService.CreatePasswordHash("pass", out passwordHash, out passwordSalt);
+            _passwordService.CreatePasswordHash(rootUserPassword, out passwordHash, out passwordSalt);
 
             ApplicationUser user = new ApplicationUser
             {
-                Username = "root",
+                Username = rootUserUsername,
                 PasswordHash = passwordHash,
                 PasswordSalt = passwordSalt,
                 Role = "Root",
@@ -56,16 +60,13 @@ public class ForumController : Controller
             await _context.SaveChangesAsync();
         }
 
-        // Getting all categories
         List<Category> categories = await _context.Categories.Where(c => c.IsActive).ToListAsync();
 
-        // Iterate over each category
         foreach (Category category in categories)
         {
             // Fill the List<Topic> property for each category
             category.Topics = await _context.Topics.Where(t => t.CategoryId == category.Id && t.IsActive).ToListAsync();
 
-            // Iterate over each element in each categorys List<Topic> property
             foreach (Topic topic in category.Topics)
             {
                 Comment mostRecentComment = await _context.Comments.FindAsync(topic.MostRecentCommentId);
@@ -107,9 +108,11 @@ public class ForumController : Controller
             return View(null);
         }
 
+        // If no page is passed in, it is page 0
         int pageIndex = page - 1 ?? 0;
         int itemsPerPage = 2;
 
+        // Search only active posts in the current topic, take only the posts required for display on the current page
         List<Post> posts = await _context.Posts.Where(p => p.TopicId == id && p.IsActive)
         .OrderByDescending(p => p.MostRecentCommentTS)
         .Skip(itemsPerPage * pageIndex)
@@ -122,6 +125,7 @@ public class ForumController : Controller
         }
         else
         {
+            // Fill the List<Post> property
             foreach (Post post in posts)
             {
                 Comment mostRecentComment = await _context.Comments.FindAsync(post.MostRecentCommentId);
@@ -150,6 +154,7 @@ public class ForumController : Controller
 
         int totalItems = await _context.Posts.Where(p => p.TopicId == id && p.IsActive).CountAsync();
 
+        // Pagination variables, stored in ViewBag
         ViewBag.totalItems = totalItems;
         ViewBag.itemsPerPage = itemsPerPage;
         ViewBag.currentPage = pageIndex + 1;
@@ -173,9 +178,11 @@ public class ForumController : Controller
         post.ApplicationUser = await _context.ApplicationUsers.FindAsync(post.ApplicationUserId);
         post.Topic = await _context.Topics.FindAsync(post.TopicId);
 
+        // If no page is passed in, it is page 0
         int pageIndex = page - 1 ?? 0;
         int itemsPerPage = 2;
 
+         // Search only active comments in the current post, take only the comments required for display on the current page
         List<Comment> comments = await _context.Comments.Where(c => c.PostId == id && c.IsActive)
         .OrderBy(c => c.CreatedTS)
         .Skip(itemsPerPage * pageIndex)
@@ -188,6 +195,7 @@ public class ForumController : Controller
         }
         else
         {
+            // Fill the List<Comment> property
             foreach (Comment comment in comments)
             {
                 comment.ApplicationUser = await _context.ApplicationUsers.FindAsync(comment.ApplicationUserId);
@@ -202,6 +210,7 @@ public class ForumController : Controller
 
         int totalItems = await _context.Comments.Where(c => c.PostId == id && c.IsActive).CountAsync();
 
+        // Pagination variables, stored in ViewBag
         ViewBag.totalItems = totalItems;
         ViewBag.itemsPerPage = itemsPerPage;
         ViewBag.currentPage = pageIndex + 1;
@@ -399,6 +408,7 @@ public class ForumController : Controller
         await _context.Comments.AddAsync(comment);
         await _context.SaveChangesAsync();
 
+        // Changing the post and topic most recent comment to this comment
         post.MostRecentCommentId = comment.Id;
         post.MostRecentCommentTS = unixTime;
 
@@ -443,6 +453,7 @@ public class ForumController : Controller
 
             Post post = await _context.Posts.FindAsync(comment.PostId);
 
+            // Because the comment got inactivated, a new most recent one must take its place. Recalculating most recent comment.
             Comment newMostRecentCommentForPost = await _context.Comments.Where(c => c.PostId == post.Id && c.IsActive)
             .OrderByDescending(c => c.CreatedTS)
             .FirstOrDefaultAsync();
@@ -460,6 +471,7 @@ public class ForumController : Controller
 
             Topic topic = await _context.Topics.FindAsync(comment.TopicId);
 
+            // This query gets the new most recent comment for this topic, to replace the inactivated one.
             var query = from c in _context.Comments
                         join p in _context.Posts
                         on c.PostId equals p.Id
@@ -500,6 +512,7 @@ public class ForumController : Controller
 
             Topic topic = await _context.Topics.FindAsync(post.TopicId);
 
+            // This query gets the new most recent comment for this topic, as the post being inactivated means the recent comment needs to be replaced.
             var query = from c in _context.Comments
                         join p in _context.Posts
                         on c.PostId equals p.Id

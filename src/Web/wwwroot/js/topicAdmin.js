@@ -14,6 +14,7 @@ function submitDeletePost() {
     document.getElementById("deletePostForm").submit();
 }
 
+// When a user clicks outside the modal window, it exits the modal
 window.onclick = function(event) {
     if (event.target == confirmDeletePostModal) {
         confirmDeletePostModal.style.display = 'none';

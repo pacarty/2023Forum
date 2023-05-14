@@ -51,6 +51,7 @@ public class AdminController : Controller
     {
         List<ApplicationUser> users = new List<ApplicationUser>();
 
+        // If no page is passed in, it is page 0
         int pageIndex = page - 1 ?? 0;
         int totalItems = 0;
         int itemsPerPage = 2;
@@ -71,6 +72,7 @@ public class AdminController : Controller
             return new ForbidResult();
         }
 
+        // The users that can be viewed depend on the current users role
         if (currentUser.Role == "Root")
         {
             users = await _context.ApplicationUsers
@@ -99,6 +101,7 @@ public class AdminController : Controller
             totalItems = await _context.ApplicationUsers.Where(u => u.Role != "Root" && u.Role != "Admin" && u.Role != "Moderator").CountAsync();
         }
 
+        // Pagination variables, stored in ViewBag
         ViewBag.totalItems = totalItems;
         ViewBag.itemsPerPage = itemsPerPage;
         ViewBag.currentPage = pageIndex + 1;
@@ -140,6 +143,8 @@ public class AdminController : Controller
         List<string> roles;
         List<Category> categories;
 
+        // The roles able to be edited depend on the current users role. If moderator, they cannot edit roles.
+        // Also for moderators, only categories that they are moderators of can be edited.
         if (currentUser.Role == "Root")
         {
             roles = new List<string> { "Root", "Admin", "Moderator", "User", "Banned" };
@@ -168,6 +173,8 @@ public class AdminController : Controller
             return new ForbidResult();
         }
 
+        // The lists for roles and categories are stored in ViewBag and passed to the view.
+        // We also check which categories the user we are editing are moderators of or banned in. This is so we can check the box of that category in the view.
         ViewBag.editRoles = roles;
         ViewBag.categories = categories;
         ViewBag.selectedModeratedCategories = await _context.ModeratorLinks.Where(m => m.ApplicationUserId == userToEdit.Id).ToListAsync();
@@ -190,14 +197,19 @@ public class AdminController : Controller
 
         foreach (Category category in await _context.Categories.Where(c => c.IsActive).ToListAsync())
         {
+            // For each category, we check if there exists a record in ModeratorLink where the categoryId equals userId
             ModeratorLink moderatorLink = await _context.ModeratorLinks.Where(m => m.ApplicationUserId == userId && m.CategoryId == category.Id).FirstOrDefaultAsync();
 
+            // Note: We need the below if statement because we can't remove a record that doesn't exist
+            // If no link then we see if we need to add category to table
             if (moderatorLink == null)
             {
                 bool isCategoryChecked = false;
 
                 foreach (string cat in moderation_categories)
                 {
+                    // In EditUser.cshtml, the checkbox id is moderation_category_@categories[i].Id.
+                    // By starting at index 20, we remove moderation_category_ and just take the category Id
                     if (Int32.Parse(cat.Substring(20)) == category.Id)
                     {
                         isCategoryChecked = true;
@@ -205,6 +217,7 @@ public class AdminController : Controller
                     }
                 }
 
+                // If the category is checked, we create a new ModeratorLink record matching the user to the category
                 if (isCategoryChecked)
                 {
                     ModeratorLink newModeratorLink = new ModeratorLink
@@ -217,12 +230,15 @@ public class AdminController : Controller
                     await _context.SaveChangesAsync();
                 }  
             }
+            // If there is a link, we see if we need to remove record from table
             else
             {
                 bool isCategoryChecked = false;
 
                 foreach (string cat in moderation_categories)
                 {
+                    // In EditUser.cshtml, the checkbox id is moderation_category_@categories[i].Id.
+                    // By starting at index 20, we remove moderation_category_ and just take the category Id
                     if (Int32.Parse(cat.Substring(20)) == category.Id)
                     {
                         isCategoryChecked = true;
@@ -230,6 +246,7 @@ public class AdminController : Controller
                     }
                 }
 
+                // If the category is not checked, we remove the existing ModeratorLink record with that user id and category id
                 if (!isCategoryChecked)
                 {
                     _context.Remove(moderatorLink);
@@ -276,21 +293,27 @@ public class AdminController : Controller
 
         foreach (Category category in categories)
         {
+            // For each category, we check if there exists a record in BannedLink where the categoryId equals userId
             BannedLink bannedLink = await _context.BannedLinks.Where(m => m.ApplicationUserId == userId && m.CategoryId == category.Id).FirstOrDefaultAsync();
 
+            // Note: We need the below if statement because we can't remove a record that doesn't exist
+            // If no link then we see if we need to add category to table
             if (bannedLink == null)
             {
                 bool isCategoryChecked = false;
 
                 foreach (string cat in banned_categories)
                 {
+                    // In EditUser.cshtml, the checkbox id is banned_category_@categories[i].Id.
+                    // By starting at index 16, we remove banned_category_ and just take the category Id
                     if (Int32.Parse(cat.Substring(16)) == category.Id)
                     {
                         isCategoryChecked = true;
                         break;
                     }
                 }
-
+                
+                // If the category is checked, we create a new BannedLink record matching the user to the category
                 if (isCategoryChecked)
                 {
                     BannedLink newBannedLink = new BannedLink
@@ -303,12 +326,15 @@ public class AdminController : Controller
                     await _context.SaveChangesAsync();
                 }  
             }
+            // If there is a link, we see if we need to remove record from table
             else
             {
                 bool isCategoryChecked = false;
 
                 foreach (string cat in banned_categories)
                 {
+                    // In EditUser.cshtml, the checkbox id is banned_category_@categories[i].Id.
+                    // By starting at index 16, we remove banned_category_ and just take the category Id
                     if (Int32.Parse(cat.Substring(16)) == category.Id)
                     {
                         isCategoryChecked = true;
@@ -316,6 +342,7 @@ public class AdminController : Controller
                     }
                 }
 
+                // If the category is not checked, we remove the existing BannedLink record with that user id and category id
                 if (!isCategoryChecked)
                 {
                     _context.Remove(bannedLink);

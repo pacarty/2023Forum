@@ -8,5 +8,5 @@ public class ApplicationUser
     public byte[] PasswordHash { get; set; }
     public byte[] PasswordSalt { get; set; }
     public string Role { get; set; }
-    public bool ShowModControls { get; set; }
+    public bool ShowModControls { get; set; } // Used for setting if Add/Delete options are displayed
 }
