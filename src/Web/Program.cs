@@ -12,8 +12,16 @@ builder.Services.AddTransient<IPasswordService, PasswordService>();
 
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddDbContext<DataContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDbContext<DataContext>(options =>
+        options.UseSqlite(builder.Configuration.GetConnectionString("LocalConnection")));
+}
+else
+{
+    builder.Services.AddDbContext<DataContext>(options =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("ProductionConnection")));
+}
 
 builder.Services.AddAuthentication("WhirlAuth")
     .AddCookie("WhirlAuth", options =>

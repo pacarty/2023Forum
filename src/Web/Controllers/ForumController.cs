@@ -37,12 +37,11 @@ public class ForumController : Controller
         await _context.Database.EnsureCreatedAsync();
 
         // here we want to check if any user has been created. if not, we will set one up. The username and password should be the desired credentials of the user who sets up this forum ie. the Root user. TODO: make it so that the username and password variables are stored somewhere like an env file or in appsettings.json.
-
-        string rootUserUsername = "root";
-        string rootUserPassword = "pass";
-
         if (!await _context.ApplicationUsers.AnyAsync())
         {
+            string rootUserUsername = "root";
+            string rootUserPassword = "pass";
+            
             byte[] passwordHash, passwordSalt;
             _passwordService.CreatePasswordHash(rootUserPassword, out passwordHash, out passwordSalt);
 
@@ -110,7 +109,7 @@ public class ForumController : Controller
 
         // If no page is passed in, it is page 0
         int pageIndex = page - 1 ?? 0;
-        int itemsPerPage = 2;
+        int itemsPerPage = 10;
 
         // Search only active posts in the current topic, take only the posts required for display on the current page
         List<Post> posts = await _context.Posts.Where(p => p.TopicId == id && p.IsActive)
@@ -180,7 +179,7 @@ public class ForumController : Controller
 
         // If no page is passed in, it is page 0
         int pageIndex = page - 1 ?? 0;
-        int itemsPerPage = 2;
+        int itemsPerPage = 10;
 
          // Search only active comments in the current post, take only the comments required for display on the current page
         List<Comment> comments = await _context.Comments.Where(c => c.PostId == id && c.IsActive)

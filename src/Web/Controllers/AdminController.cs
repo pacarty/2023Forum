@@ -54,7 +54,7 @@ public class AdminController : Controller
         // If no page is passed in, it is page 0
         int pageIndex = page - 1 ?? 0;
         int totalItems = 0;
-        int itemsPerPage = 2;
+        int itemsPerPage = 10;
 
         Claim? currentUserIdClaim = User.Claims.Where(c => c.Type == "UserId").FirstOrDefault();
 
