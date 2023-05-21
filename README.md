@@ -1,6 +1,6 @@
 # 2023Forum
 A customisable forum created to demonstrate functionality in ASP.NET Core.
-Live version of the website: [patforum.azurewebsites.net](patforum.azurewebsites.net)
+Live version of the website: [https://patforum.azurewebsites.net/](https://patforum.azurewebsites.net/)
 
 ## Run the application
 Use these instructions to get the project up and running.
@@ -33,10 +33,11 @@ Follow these steps to get your development environment set up:
 
   5. Launch [http://localhost:5001](http://localhost:5001) in a web browser to use the application.
 
-## How to use application
+## How to use the application
 When the website is first opened, a sqlite db file will be created in the Web directory. A user will be created:
 
 Username: root
+
 Password: pass
 
 This will be the "root" user of the application, and the user with the most amount of authority. There can be multiple root users but it is reccomended to only have one.
